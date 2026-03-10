@@ -1,0 +1,15 @@
+# node
+node_modules
+.next
+dist
+build
+
+# laravel
+/vendor
+.env
+/storage/logs
+/storage/framework
+
+# system
+.DS_Store
+Thumbs.db

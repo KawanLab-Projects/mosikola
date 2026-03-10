@@ -1,0 +1,60 @@
+﻿            </div>
+
+            {/* â”€â”€ Edit Dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            <Dialog open={!!editTarget} onOpenChange={open => !open && setEditTarget(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Data Guru</DialogTitle>
+                        <DialogDescription>Perbarui nama atau NIP guru.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                        <div className="grid gap-2">
+                            <Label htmlFor="edit-name">Nama Lengkap</Label>
+                            <Input
+                                id="edit-name"
+                                value={editForm.name}
+                                onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="edit-nip">NIP</Label>
+                            <Input
+                                id="edit-nip"
+                                value={editForm.nip}
+                                onChange={e => setEditForm(f => ({ ...f, nip: e.target.value }))}
+                            />
+                        </div>
+                    </div>
+                    <Separator />
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setEditTarget(null)}>Batal</Button>
+                        <Button onClick={handleEdit} disabled={isEditing}>
+                            {isEditing ? "Menyimpan..." : "Simpan Perubahan"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* â”€â”€ Delete Alert â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            <AlertDialog open={!!deleteTarget} onOpenChange={open => !open && setDeleteTarget(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Hapus Guru?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Anda akan menghapus <strong>{deleteTarget?.name}</strong>. Semua penugasan guru ini juga akan ikut terhapus. Tindakan ini tidak bisa dibatalkan.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {isDeleting ? "Menghapus..." : "Hapus"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Attach User Account Dialog */}
