@@ -13,6 +13,8 @@ class IdCardOrderItem extends Model
         'print_snapshot',
     ];
 
+    protected $appends = ['photo_url'];
+
     protected $casts = [
         'print_snapshot' => 'array',
     ];
@@ -25,5 +27,18 @@ class IdCardOrderItem extends Model
     public function student()
     {
         return $this->belongsTo(Student::class);
+    }
+
+    public function getPhotoUrlAttribute()
+    {
+        if (empty($this->photo_path)) return null;
+
+        // If it was uploaded before R2 migration, it starts with 'storage/'
+        if (str_starts_with($this->photo_path, 'storage/')) {
+            return asset($this->photo_path);
+        }
+
+        // Newer uploads are direct S3 paths
+        return \Illuminate\Support\Facades\Storage::disk('s3')->url($this->photo_path);
     }
 }

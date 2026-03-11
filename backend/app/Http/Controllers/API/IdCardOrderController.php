@@ -271,6 +271,16 @@ class IdCardOrderController extends Controller
             ->keyBy('key')
             ->map(fn($s) => $s->value);
 
+        $logoUrl = null;
+        if (!empty($tenantSettings['school_logo_url'])) {
+            $logoPath = $tenantSettings['school_logo_url'];
+            if (str_starts_with($logoPath, 'storage/')) {
+                $logoUrl = asset($logoPath);
+            } else {
+                $logoUrl = \Illuminate\Support\Facades\Storage::disk('s3')->url($logoPath);
+            }
+        }
+
         return response()->json([
             'order' => $order,
             'schoolData' => [
@@ -278,7 +288,7 @@ class IdCardOrderController extends Controller
                 'address' => $tenantSettings['school_address'] ?? 'Alamat Belum Diatur',
                 'principal_name' => $tenantSettings['principal_name'] ?? 'Nama Kepala Sekolah',
                 'principal_nip' => $tenantSettings['principal_nip'] ?? '-',
-                'logo_url' => $tenantSettings['school_logo_url'] ?? null
+                'logo_url' => $logoUrl
             ]
         ]);
     }

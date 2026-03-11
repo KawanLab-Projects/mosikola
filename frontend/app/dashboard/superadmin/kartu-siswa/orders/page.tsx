@@ -49,6 +49,7 @@ interface OrderItem {
     student: Student | null;
     print_snapshot: PrintSnapshot;
     photo_path: string;
+    photo_url?: string;
 }
 
 interface Order {
@@ -66,7 +67,9 @@ interface Order {
     template: {
         name: string;
         background_path: string;
+        background_url: string;
         back_background_path: string;
+        back_background_url: string;
         canvas_state: {
             elements: Record<string, unknown>;
             layout: string;
@@ -305,7 +308,7 @@ export default function SuperadminOrdersPage() {
                 birth_place: firstItem.print_snapshot.birth_place || firstItem.student?.birth_place,
                 birth_date: firstItem.print_snapshot.birth_date || firstItem.student?.birth_date,
                 address: firstItem.student?.address || '',
-                photo_url: firstItem.photo_path
+                photo_url: firstItem.photo_url || firstItem.photo_path
             }
 
             flushSync(() => {
@@ -313,7 +316,7 @@ export default function SuperadminOrdersPage() {
                     <IdCardPrintCanvas
                         side="back"
                         layout={layoutRaw}
-                        backgroundUrl={order.template.back_background_path}
+                        backgroundUrl={order.template.back_background_url || order.template.back_background_path}
                         canvasState={canvasState}
                         inlineFontCss={inlineFontCss}
                         studentData={dummyStudentData}
@@ -348,7 +351,7 @@ export default function SuperadminOrdersPage() {
                     birth_place: item.print_snapshot.birth_place || student?.birth_place,
                     birth_date: item.print_snapshot.birth_date || student?.birth_date,
                     address: student?.address || '',
-                    photo_url: item.photo_path
+                    photo_url: item.photo_url || item.photo_path
                 }
 
                 // --------- Render FRONT Side ---------
@@ -357,7 +360,7 @@ export default function SuperadminOrdersPage() {
                         <IdCardPrintCanvas
                             side="front"
                             layout={layoutRaw}
-                            backgroundUrl={order.template.background_path}
+                            backgroundUrl={order.template.background_url || order.template.background_path}
                             canvasState={canvasState}
                             inlineFontCss={inlineFontCss}
                             studentData={studentData}
