@@ -45,13 +45,13 @@ class IdCardTemplateController extends Controller
         ];
 
         if ($request->hasFile('background_image')) {
-            $path = $request->file('background_image')->store('id-card-templates', 'public');
-            $template->background_path = $path;
+            $path = $request->file('background_image')->store('id-card-templates', 's3');
+            if ($path) $template->background_path = $path;
         }
 
         if ($request->hasFile('back_background_image')) {
-            $path = $request->file('back_background_image')->store('id-card-templates', 'public');
-            $template->back_background_path = $path;
+            $path = $request->file('back_background_image')->store('id-card-templates', 's3');
+            if ($path) $template->back_background_path = $path;
         }
 
         $template->save();
@@ -81,27 +81,33 @@ class IdCardTemplateController extends Controller
         if (isset($validated['requires_transparent_photo'])) $template->requires_transparent_photo = $validated['requires_transparent_photo'];
 
         if ($request->hasFile('background_image')) {
-            if ($template->background_path) {
-                Storage::disk('public')->delete($template->background_path);
+            $path = $request->file('background_image')->store('id-card-templates', 's3');
+            if ($path) {
+                if ($template->background_path) {
+                    Storage::disk('s3')->delete($template->background_path);
+                }
+                $template->background_path = $path;
             }
-            $path = $request->file('background_image')->store('id-card-templates', 'public');
-            $template->background_path = $path;
         }
 
         if ($request->hasFile('back_background_image')) {
-            if ($template->back_background_path) {
-                Storage::disk('public')->delete($template->back_background_path);
+            $path = $request->file('back_background_image')->store('id-card-templates', 's3');
+            if ($path) {
+                if ($template->back_background_path) {
+                    Storage::disk('s3')->delete($template->back_background_path);
+                }
+                $template->back_background_path = $path;
             }
-            $path = $request->file('back_background_image')->store('id-card-templates', 'public');
-            $template->back_background_path = $path;
         }
 
         if ($request->hasFile('thumbnail_image')) {
-            if ($template->thumbnail_path) {
-                Storage::disk('public')->delete($template->thumbnail_path);
+            $path = $request->file('thumbnail_image')->store('id-card-templates/thumbnails', 's3');
+            if ($path) {
+                if ($template->thumbnail_path) {
+                    Storage::disk('s3')->delete($template->thumbnail_path);
+                }
+                $template->thumbnail_path = $path;
             }
-            $path = $request->file('thumbnail_image')->store('id-card-templates/thumbnails', 'public');
-            $template->thumbnail_path = $path;
         }
 
         $template->save();
@@ -115,11 +121,11 @@ class IdCardTemplateController extends Controller
 
         // Optional: Ensure template has no orders before deleting, or soft-delete instead, but since we cascade constraints, let's keep it simple.
         if ($template->background_path) {
-            Storage::disk('public')->delete($template->background_path);
+            Storage::disk('s3')->delete($template->background_path);
         }
 
         if ($template->back_background_path) {
-            Storage::disk('public')->delete($template->back_background_path);
+            Storage::disk('s3')->delete($template->back_background_path);
         }
 
         $template->delete();

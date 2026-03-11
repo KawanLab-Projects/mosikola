@@ -179,14 +179,14 @@ export default function TemplateEditorPage() {
             setPrice(data.price)
             setIsActive(data.is_active)
             setRequiresTransparentPhoto(data.requires_transparent_photo || false)
-            if (data.background_path) {
-                setBackgroundUrl(`${process.env.NEXT_PUBLIC_ASSET_URL}/storage/${data.background_path}`)
+            if (data.background_url) {
+                setBackgroundUrl(data.background_url)
             }
-            if (data.back_background_path) {
-                setBackBackgroundUrl(`${process.env.NEXT_PUBLIC_ASSET_URL}/storage/${data.back_background_path}`)
+            if (data.back_background_url) {
+                setBackBackgroundUrl(data.back_background_url)
             }
-            if (data.thumbnail_path) {
-                setThumbnailUrl(`${process.env.NEXT_PUBLIC_ASSET_URL}/storage/${data.thumbnail_path}`)
+            if (data.thumbnail_url) {
+                setThumbnailUrl(data.thumbnail_url)
             }
             if (data.canvas_state) {
                 if (data.canvas_state.elements) {
@@ -243,19 +243,18 @@ export default function TemplateEditorPage() {
             const formData = new FormData()
             const inputField = activeSide === 'front' ? 'background_image' : 'back_background_image'
             formData.append(inputField, file)
-            formData.append('_method', 'PUT') // Required by Laravel for PUT requests with FormData
 
             const sideLabel = activeSide === 'front' ? 'Depan' : 'Belakang'
             toast.loading(`Mengunggah background ${sideLabel}...`, { id: 'upload' })
 
-            const putRes = await api.post(`/superadmin/id-card-templates/${templateId}`, formData, {
+            const res = await api.post(`/superadmin/id-card-templates/${templateId}/upload`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             })
 
             if (activeSide === 'front') {
-                setBackgroundUrl(`${process.env.NEXT_PUBLIC_ASSET_URL}/storage/${putRes.data.background_path}`)
+                setBackgroundUrl(res.data.background_url)
             } else {
-                setBackBackgroundUrl(`${process.env.NEXT_PUBLIC_ASSET_URL}/storage/${putRes.data.back_background_path}`)
+                setBackBackgroundUrl(res.data.back_background_url)
             }
 
             toast.success(`Background ${sideLabel} diperbarui`, { id: 'upload' })
@@ -273,13 +272,12 @@ export default function TemplateEditorPage() {
         }
         try {
             const formData = new FormData()
-            formData.append('_method', 'PUT')
             formData.append('thumbnail_image', file)
-            const res = await api.post(`/superadmin/id-card-templates/${templateId}`, formData, {
+            const res = await api.post(`/superadmin/id-card-templates/${templateId}/upload`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             })
-            if (res.data.thumbnail_path) {
-                setThumbnailUrl(`${process.env.NEXT_PUBLIC_ASSET_URL}/storage/${res.data.thumbnail_path}`)
+            if (res.data.thumbnail_url) {
+                setThumbnailUrl(res.data.thumbnail_url)
             }
             toast.success("Thumbnail berhasil diunggah")
         } catch {

@@ -21,6 +21,9 @@ interface Template {
     background_path: string | null;
     back_background_path: string | null;
     thumbnail_path: string | null;
+    background_url?: string | null;
+    back_background_url?: string | null;
+    thumbnail_url?: string | null;
     price: number;
     is_active: boolean;
 }
@@ -112,10 +115,10 @@ export default function TemplatesPage() {
                     {templates.map(template => (
                         <Card key={template.id} className="overflow-hidden hover:shadow-md transition-shadow group border-border">
                             <div className="relative h-56 bg-linear-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center border-b group-hover:bg-primary/5 transition-colors">
-                                {template.thumbnail_path || template.background_path ? (
+                                {template.thumbnail_url || template.background_url ? (
                                     <div
                                         className="absolute inset-0 bg-cover bg-center"
-                                        style={{ backgroundImage: `url(${process.env.NEXT_PUBLIC_ASSET_URL}/storage/${template.thumbnail_path || template.background_path})` }}
+                                        style={{ backgroundImage: `url(${template.thumbnail_url || template.background_url})` }}
                                     />
                                 ) : (
                                     <div className="text-muted-foreground flex flex-col items-center">

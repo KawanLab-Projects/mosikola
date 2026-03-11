@@ -51,6 +51,8 @@ type Template = {
     price: number
     thumbnail_path?: string
     background_path?: string
+    thumbnail_url?: string
+    background_url?: string
     requires_transparent_photo?: boolean
 }
 
@@ -247,10 +249,10 @@ export default function OrderKartuSiswaPage() {
                                                 onClick={() => setSelectedTemplate(t)}
                                             >
                                                 <div className="h-48 bg-slate-100 flex items-center justify-center border-b relative">
-                                                    {t.thumbnail_path || t.background_path ? (
+                                                    {t.thumbnail_url || t.background_url ? (
                                                         <div
                                                             className="absolute inset-0 bg-cover bg-center"
-                                                            style={{ backgroundImage: `url(${process.env.NEXT_PUBLIC_ASSET_URL}/storage/${t.thumbnail_path || t.background_path})` }}
+                                                            style={{ backgroundImage: `url(${t.thumbnail_url || t.background_url})` }}
                                                         />
                                                     ) : (
                                                         <ImageIcon className="h-10 w-10 text-muted-foreground opacity-30" />
@@ -269,9 +271,9 @@ export default function OrderKartuSiswaPage() {
                                                                     <DialogTitle>Preview Desain Kartu</DialogTitle>
                                                                 </VisuallyHidden.Root>
                                                                 <div className="relative w-full h-[80vh] flex items-center justify-center p-4">
-                                                                    {t.thumbnail_path || t.background_path ? (
+                                                                    {t.thumbnail_url || t.background_url ? (
                                                                         <Image
-                                                                            src={`${process.env.NEXT_PUBLIC_ASSET_URL}/storage/${t.thumbnail_path || t.background_path}`}
+                                                                            src={t.thumbnail_url || t.background_url || ""}
                                                                             alt={t.name}
                                                                             width={800}
                                                                             height={500}
@@ -477,7 +479,14 @@ export default function OrderKartuSiswaPage() {
                                                 <div key={idx} className="border rounded bg-muted/10 p-2 text-center text-xs">
                                                     <div className="w-12 h-12 bg-slate-200 rounded-full mx-auto mb-2 overflow-hidden">
                                                         {item.photo_url ? (
-                                                            <Image src={`${process.env.NEXT_PUBLIC_ASSET_URL}${item.photo_url}`} alt={item.student.name} width={100} height={100} className="w-full h-full object-cover" />
+                                                            <Image
+                                                                src={item.photo_url.startsWith('http') ? item.photo_url : `${process.env.NEXT_PUBLIC_ASSET_URL}${item.photo_url}`}
+                                                                alt={item.student.name}
+                                                                width={100}
+                                                                height={100}
+                                                                className="w-full h-full object-cover"
+                                                                unoptimized={true}
+                                                            />
                                                         ) : (
                                                             <ImageIcon className="w-6 h-6 m-3 text-slate-400" />
                                                         )}

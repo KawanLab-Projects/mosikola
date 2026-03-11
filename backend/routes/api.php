@@ -44,6 +44,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Kartu Siswa Superadmin
     Route::apiResource('superadmin/id-card-templates', IdCardTemplateController::class);
+    // Explicit POST route for file uploads (FormData with files can't use PUT directly on API routes)
+    Route::post('superadmin/id-card-templates/{id}/upload', [IdCardTemplateController::class, 'update']);
+
     Route::get('superadmin/id-card-orders', [IdCardFulfillmentController::class, 'index']);
     Route::get('superadmin/id-card-orders/{id}/download', [IdCardFulfillmentController::class, 'downloadAssets']);
     Route::put('superadmin/id-card-orders/{id}', [IdCardFulfillmentController::class, 'update']);

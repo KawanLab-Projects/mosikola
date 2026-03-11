@@ -346,7 +346,7 @@ export default function PengaturanPage() {
                                         <div className="w-24 h-24 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center border-2 border-muted relative group">
                                             {settings.school.school_logo_url ? (
                                                 <Image
-                                                    src={`${process.env.NEXT_PUBLIC_ASSET_URL}/storage/${settings.school.school_logo_url}`}
+                                                    src={settings.school.school_logo_url.startsWith('http') ? settings.school.school_logo_url : `${process.env.NEXT_PUBLIC_ASSET_URL}${settings.school.school_logo_url}`}
                                                     alt="Logo Sekolah"
                                                     width={96}
                                                     height={96}

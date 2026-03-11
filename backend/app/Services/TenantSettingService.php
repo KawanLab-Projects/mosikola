@@ -59,9 +59,13 @@ class TenantSettingService
 
         $result = [];
         foreach (self::SCHEMA as $group => $defaults) {
-            $result[$group] = collect($defaults)->map(
-                fn($default, $key) => $saved[$group][$key] ?? $default
-            );
+            $result[$group] = collect($defaults)->map(function ($default, $key) use ($saved, $group) {
+                $value = $saved[$group][$key] ?? $default;
+                if ($key === 'school_logo_url' && $value) {
+                    return \Illuminate\Support\Facades\Storage::disk('s3')->url($value);
+                }
+                return $value;
+            });
         }
 
         return $result;

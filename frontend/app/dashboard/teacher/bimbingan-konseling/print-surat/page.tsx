@@ -148,7 +148,7 @@ function PrintSuratPeringatanContent() {
                         {logoUrl ? (
                             /* eslint-disable-next-line @next/next/no-img-element */
                             <img
-                                src={logoUrl.startsWith('http') ? logoUrl : `${process.env.NEXT_PUBLIC_ASSET_URL}/storage/${logoUrl}`}
+                                src={logoUrl.startsWith('http') ? logoUrl : `${process.env.NEXT_PUBLIC_ASSET_URL}${logoUrl}`}
                                 alt="Logo Sekolah"
                                 className="w-24 h-24 object-contain mr-6"
                             />

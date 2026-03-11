@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use ZipArchive;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class IdCardOrderController extends Controller
 {
@@ -54,8 +55,8 @@ class IdCardOrderController extends Controller
         $tenantId = $request->header('X-Tenant-Id');
 
         // If header not strictly enforced globally, default to user's tenant
-        if (!$tenantId && auth()->check()) {
-            $user = auth()->user();
+        if (!$tenantId && Auth::check()) {
+            $user = Auth::user();
             $tenantUser = $user->tenantUsers()->where('is_active', true)->first();
             if ($tenantUser) $tenantId = $tenantUser->tenant_id;
         }
@@ -91,7 +92,8 @@ class IdCardOrderController extends Controller
         }
 
         $tmpDir = 'temp_zips/' . Str::random(10);
-        $extractPath = storage_path('app/public/' . $tmpDir);
+        $extractPath = Storage::disk('local')->path($tmpDir);
+        Storage::disk('local')->makeDirectory($tmpDir);
         $zip->extractTo($extractPath);
         $zip->close();
 
@@ -111,13 +113,14 @@ class IdCardOrderController extends Controller
             $student = Student::where('tenant_id', $tenantId)->where('nisn', $nisn)->first();
 
             if ($student) {
-                // Move file to permanent location
+                // Move file to permanent location on R2 (s3 disk)
                 $newPath = 'student_photos/' . $tenantId . '/' . Str::random(15) . '.' . $ext;
-                Storage::disk('public')->copy($tmpDir . '/' . $f->getRelativePathname(), $newPath);
+                // Read from local tmp, write to s3
+                Storage::disk('s3')->put($newPath, file_get_contents($f->getPathname()));
 
                 $valid[] = [
                     'student' => $student,
-                    'photo_url' => '/storage/' . $newPath,
+                    'photo_url' => Storage::disk('s3')->url($newPath),
                     'photo_path' => $newPath
                 ];
             } else {
@@ -126,7 +129,7 @@ class IdCardOrderController extends Controller
         }
 
         // Cleanup temporary extraction folder
-        Storage::disk('public')->deleteDirectory($tmpDir);
+        Storage::disk('local')->deleteDirectory($tmpDir);
 
         return response()->json([
             'valid' => $valid,

@@ -51,7 +51,7 @@ class TenantSettingController extends Controller
 
         $tenantId = $this->resolveTenantId($request);
 
-        $path = $request->file('logo')->store('tenant-logos', 'public');
+        $path = $request->file('logo')->store('tenant-logos', 's3');
 
         $this->service->saveMany($tenantId, [
             [
@@ -63,7 +63,7 @@ class TenantSettingController extends Controller
 
         return response()->json([
             'message' => 'Logo berhasil diunggah.',
-            'path' => $path
+            'path' => \Illuminate\Support\Facades\Storage::disk('s3')->url($path)
         ]);
     }
 }
