@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Superadmin;
 use App\Http\Controllers\Controller;
 use App\Models\IdCardTemplate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -41,6 +42,7 @@ class IdCardTemplateController extends Controller
             'name' => ['x' => 200, 'y' => 50, 'fontSize' => 20, 'fontFamily' => 'Arial', 'color' => '#000000', 'visible' => true],
             'nisn' => ['x' => 200, 'y' => 80, 'fontSize' => 16, 'fontFamily' => 'Arial', 'color' => '#333333', 'visible' => true],
             'birth_info' => ['x' => 200, 'y' => 110, 'fontSize' => 14, 'fontFamily' => 'Arial', 'color' => '#333333', 'visible' => true],
+            'address' => ['x' => 200, 'y' => 140, 'fontSize' => 14, 'fontFamily' => 'Arial', 'color' => '#333333', 'visible' => true],
             'qr_code' => ['x' => 300, 'y' => 200, 'width' => 80, 'height' => 80, 'visible' => true],
         ];
 

@@ -28,7 +28,7 @@ import {
 import { Rnd } from "react-rnd"
 
 // Define the schema for our canvas elements
-type ElementKey = 'photo' | 'name' | 'nisn' | 'birth_info' | 'jurusan' | 'qr_code' | 'barcode' | 'logo' | 'back_logo' | 'back_text' | 'school_name' | 'back_school_name' | 'back_nama_kepala_sekolah' | 'back_nip_kepala_sekolah'
+type ElementKey = 'photo' | 'name' | 'nisn' | 'birth_info' | 'address' | 'jurusan' | 'qr_code' | 'barcode' | 'logo' | 'back_logo' | 'back_text' | 'school_name' | 'back_school_name' | 'back_nama_kepala_sekolah' | 'back_nip_kepala_sekolah'
 
 interface CanvasElementProps {
     x: number;
@@ -61,6 +61,7 @@ const MOCK_STUDENT = {
     name: "AHMAD SYAIFUDDIN HASAN",
     nisn: "0012345678",
     birth_info: "JAKARTA, 17 AGUSTUS 2005",
+    address: "JL. PEMUDA NO. 123, JAKARTA TIMUR",
     jurusan: "REKAYASA PERANGKAT LUNAK",
     back_nama_kepala_sekolah: "DRS. BUDI SANTOSO, M.PD",
     back_nip_kepala_sekolah: "NIP: 19700101 199512 1 001",
@@ -92,7 +93,8 @@ export default function TemplateEditorPage() {
         name: { x: 200, y: 50, fontSize: 18, fontFamily: 'Arial', fontWeight: 'bold', fontStyle: 'normal', color: '#000000', visible: true },
         nisn: { x: 200, y: 80, fontSize: 14, fontFamily: 'Arial', fontWeight: 'normal', fontStyle: 'normal', color: '#333333', visible: true },
         birth_info: { x: 200, y: 110, fontSize: 12, fontFamily: 'Arial', fontWeight: 'normal', fontStyle: 'normal', color: '#555555', visible: true },
-        jurusan: { x: 200, y: 130, fontSize: 12, fontFamily: 'Arial', fontWeight: 'normal', fontStyle: 'normal', color: '#555555', visible: true },
+        address: { x: 200, y: 130, fontSize: 12, fontFamily: 'Arial', fontWeight: 'normal', fontStyle: 'normal', color: '#555555', visible: true },
+        jurusan: { x: 200, y: 150, fontSize: 12, fontFamily: 'Arial', fontWeight: 'normal', fontStyle: 'normal', color: '#555555', visible: true },
         qr_code: { x: 300, y: 200, width: 80, height: 80, visible: true },
         barcode: { x: 200, y: 200, width: 120, height: 40, visible: false },
         back_logo: { x: 150, y: 50, width: 100, height: 100, shape: 'circle', visible: true },
@@ -106,6 +108,27 @@ export default function TemplateEditorPage() {
     // We'll use a standard Portrait 400x600 for editing, flipped for landscape
     const CANVAS_WIDTH = layout === 'portrait' ? 400 : 600
     const CANVAS_HEIGHT = layout === 'portrait' ? 600 : 400
+
+    const getElementLabel = (key: ElementKey): string => {
+        const labels: Record<string, string> = {
+            photo: 'Foto Siswa',
+            name: 'Nama Siswa',
+            nisn: 'NISN',
+            birth_info: 'Tempat, Tgl Lahir',
+            address: 'Alamat',
+            jurusan: 'Jurusan / Kompetensi',
+            qr_code: 'QR Code',
+            barcode: 'Barcode',
+            logo: 'Logo Depan',
+            school_name: 'Nama Sekolah (Depan)',
+            back_logo: 'Logo Belakang',
+            back_school_name: 'Nama Sekolah (Belakang)',
+            back_text: 'Teks Belakang (Ketentuan)',
+            back_nama_kepala_sekolah: 'Nama Kepala Sekolah',
+            back_nip_kepala_sekolah: 'NIP Kepala Sekolah'
+        };
+        return labels[key] || key.replace('_', ' ');
+    };
 
     /**
      * Smart text fitter: Abbreviates middle/last words if text overflows.
@@ -433,7 +456,7 @@ export default function TemplateEditorPage() {
                                                     key === 'barcode' ? <Barcode className="w-3.5 h-3.5" /> :
                                                         <Type className="w-3.5 h-3.5" />}
                                             <span className={`capitalize ${selectedElement === key ? 'font-bold text-primary' : ''}`}>
-                                                {key.replace('_', ' ')}
+                                                {getElementLabel(key)}
                                             </span>
                                         </div>
                                         <Switch
@@ -901,6 +924,43 @@ export default function TemplateEditorPage() {
                                     {(() => {
                                         const originalText = MOCK_STUDENT.birth_info;
                                         const { text: fittedText, transform } = getAutoFitTextAndTransform(originalText, (canvasState.birth_info.width || 100) - 12, canvasState.birth_info.fontSize || 14);
+                                        return (
+                                            <div style={{
+                                                transformOrigin: 'left center',
+                                                transform: transform,
+                                                width: '100%',
+                                            }}>
+                                                {fittedText}
+                                            </div>
+                                        );
+                                    })()}
+                                </Rnd>
+                            )}
+
+                            {/* TEXT: ADDRESS */}
+                            {canvasState.address?.visible && (
+                                <Rnd
+                                    size={{ width: canvasState.address.width || 'auto', height: canvasState.address.height || 'auto' }}
+                                    position={{ x: canvasState.address.x, y: canvasState.address.y }}
+                                    onDragStop={(e, d) => updateElement('address', { x: d.x, y: d.y })}
+                                    onResizeStop={(e, dir, ref, delta, position) => {
+                                        updateElement('address', { width: parseInt(ref.style.width, 10), ...position });
+                                    }}
+                                    enableResizing={{ top: false, right: true, bottom: false, left: false, topRight: false, bottomRight: false, bottomLeft: false, topLeft: false }}
+                                    bounds="parent"
+                                    onClick={(e: React.MouseEvent | React.TouchEvent) => { e.stopPropagation(); setSelectedElement('address'); }}
+                                    className={`cursor-move px-1 border-2 ${selectedElement === 'address' ? 'border-primary ring-2 ring-primary/30 bg-primary/10 z-50' : 'border-transparent hover:border-dashed hover:border-gray-400'} flex items-center whitespace-nowrap`}
+                                    style={{
+                                        fontSize: `${canvasState.address.fontSize}px`,
+                                        color: canvasState.address.color,
+                                        fontFamily: canvasState.address.fontFamily,
+                                        fontWeight: canvasState.address.fontWeight === 'bold' ? 'bold' : 'normal',
+                                        fontStyle: canvasState.address.fontStyle === 'italic' ? 'italic' : 'normal',
+                                    }}
+                                >
+                                    {(() => {
+                                        const originalText = MOCK_STUDENT.address;
+                                        const { text: fittedText, transform } = getAutoFitTextAndTransform(originalText, (canvasState.address.width || 100) - 12, canvasState.address.fontSize || 12);
                                         return (
                                             <div style={{
                                                 transformOrigin: 'left center',

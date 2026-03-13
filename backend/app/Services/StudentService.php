@@ -12,6 +12,7 @@ use App\Imports\StudentImport;
 use App\Models\Student;
 use App\Models\Tenant;
 use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
 
 class StudentService
 {
@@ -58,6 +59,8 @@ class StudentService
 
         return DB::transaction(function () use ($data) {
 
+            $birthDate = $this->normalizeDate($data['birth_date'] ?? null);
+
             $user = $this->userRepo->create([
                 'name'     => $data['nisn'],
                 'email'    => $data['nisn'] . '@mosikola.com',
@@ -71,7 +74,7 @@ class StudentService
                 'name'         => $data['name'],
                 'address'      => $data['address'] ?? null,
                 'birth_place'  => $data['birth_place'] ?? null,
-                'birth_date'   => $data['birth_date'] ?? null,
+                'birth_date'   => $birthDate,
                 'parent_name'  => $data['parent_name'] ?? null,
                 'parent_phone' => $data['parent_phone'] ?? null,
                 'classroom_id' => $data['classroom_id'],
@@ -120,7 +123,34 @@ class StudentService
             throw new ModelNotFoundException("Student not found");
         }
 
+        if (isset($data['birth_date'])) {
+            $data['birth_date'] = $this->normalizeDate($data['birth_date']);
+        }
+
         return $this->studentRepo->update($student, $data);
+    }
+
+    private function normalizeDate($date)
+    {
+        if (!$date) return null;
+        if (is_numeric($date)) {
+            // Likely Excel timestamp
+            try {
+                return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($date)->format('Y-m-d');
+            } catch (\Exception $e) {
+                // Ignore and try Carbon
+            }
+        }
+
+        try {
+            return Carbon::parse($date)->format('Y-m-d');
+        } catch (\Exception $e) {
+            try {
+                return Carbon::createFromFormat('d/m/Y', $date)->format('Y-m-d');
+            } catch (\Exception $e2) {
+                return $date; // Fallback
+            }
+        }
     }
 
     public function delete(string $publicId): void
