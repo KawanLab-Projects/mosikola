@@ -25,10 +25,11 @@ class TenantSettingService
             'shortened_period_days'           => '',
         ],
         'attendance' => [
-            'tolerance_late_minutes' => '15',
-            'token_ttl_minutes'      => '30',
-            'absent_mode'            => 'token',
-            'kiosk_token'            => '',
+            'tolerance_late_minutes'            => '15',
+            'token_ttl_minutes'                 => '30',
+            'absent_mode'                       => 'token',
+            'kiosk_token'                       => '',
+            'kiosk_inactivity_timeout_minutes'  => '20',
         ],
         'discipline' => [
             'notify_threshold'   => '3',

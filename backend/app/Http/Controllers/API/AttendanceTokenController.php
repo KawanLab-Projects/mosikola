@@ -57,7 +57,18 @@ class AttendanceTokenController extends Controller
             return response()->json(['valid' => false, 'message' => 'Invalid kiosk token'], 401);
         }
 
-        return response()->json(['valid' => true, 'tenant_id' => $tenantSetting->tenant_id], 200);
+        $inactivityTimeout = (int) TenantSetting::getValue(
+            $tenantSetting->tenant_id,
+            'attendance',
+            'kiosk_inactivity_timeout_minutes',
+            20
+        );
+
+        return response()->json([
+            'valid'                            => true,
+            'tenant_id'                        => $tenantSetting->tenant_id,
+            'inactivity_timeout_minutes'       => $inactivityTimeout,
+        ], 200);
     }
 
     public function getStudents(Request $request)

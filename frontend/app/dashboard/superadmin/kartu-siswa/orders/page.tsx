@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Truck, Search, CheckCircle2, Clock, PackageOpen, Download, Loader2, Printer } from "lucide-react"
+import { Truck, Search, CheckCircle2, Clock, PackageOpen, Download, Loader2, Printer, RefreshCw } from "lucide-react"
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 import { createRoot } from 'react-dom/client'
@@ -427,6 +427,15 @@ export default function SuperadminOrdersPage() {
                     <h1 className="text-2xl font-bold tracking-tight">Manajemen Pesanan Kartu</h1>
                     <p className="text-muted-foreground">Kelola pencetakan dan pengiriman Kartu Siswa ke sekolah</p>
                 </div>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={fetchOrders}
+                    disabled={loading}
+                >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                    Refresh
+                </Button>
             </div>
 
             <Card className="mb-6">

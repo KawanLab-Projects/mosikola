@@ -23,6 +23,7 @@ use App\Http\Controllers\Superadmin\IdCardTemplateController;
 use App\Http\Controllers\Superadmin\IdCardFulfillmentController;
 use App\Http\Controllers\Superadmin\N8nSettingController;
 use App\Http\Controllers\Superadmin\AiSettingController;
+use App\Http\Controllers\Superadmin\XenditSettingController;
 use App\Http\Controllers\API\AdminAttendanceController;
 use App\Http\Controllers\API\AttendanceController as ApiAttendanceController;
 use App\Http\Controllers\API\AttendanceTokenController as ApiAttendanceTokenController;
@@ -31,6 +32,7 @@ use App\Http\Controllers\Dashboard\SuperadminDashboardController;
 use App\Http\Controllers\SuperAdmin\PlanController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
 use App\Http\Controllers\AiCounselingController;
+use App\Http\Controllers\API\TenantBillingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -62,6 +64,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('superadmin/ai-settings', [AiSettingController::class, 'index']);
     Route::put('superadmin/ai-settings', [AiSettingController::class, 'update']);
     Route::post('superadmin/ai-settings/test-connection', [AiSettingController::class, 'testConnection']);
+
+    // Xendit Settings
+    Route::get('superadmin/xendit', [XenditSettingController::class, 'index']);
+    Route::put('superadmin/xendit', [XenditSettingController::class, 'update']);
+    Route::post('superadmin/xendit/test-connection', [XenditSettingController::class, 'testConnection']);
 });
 
 Route::get('/user', function (Request $request) {
@@ -122,6 +129,7 @@ Route::middleware("auth:sanctum")->group(function () {
         ]);
     });
 
+    Route::post('study-programs/bulk', [StudyProgramController::class, 'bulkStore']);
     Route::apiResource('study-programs', StudyProgramController::class);
     Route::prefix('study-programs/{studyProgram}')->group(function () {
         Route::get('classrooms', [ClassroomController::class, 'index']);
@@ -142,6 +150,7 @@ Route::middleware("auth:sanctum")->group(function () {
 
     Route::apiResource('teachers', TeacherController::class);
     Route::get('teachers/users/search', [TeacherController::class, 'searchUsers']);
+    Route::post('subjects/defaults', [SubjectController::class, 'storeDefaults']);
     Route::apiResource('subjects', SubjectController::class);
     Route::prefix('teachers/{teacher}')->group(function () {
         Route::get('assignments', [TeacherController::class, 'indexAssignments']);
@@ -242,10 +251,12 @@ Route::middleware("auth:sanctum")->group(function () {
     Route::prefix('id-card-orders')->group(function () {
         Route::get('templates', [IdCardOrderController::class, 'templates']);
         Route::get('my-orders', [IdCardOrderController::class, 'myOrders']);
+        Route::get('zip-jobs/{jobId}', [IdCardOrderController::class, 'zipJobStatus']);
         Route::get('{id}', [IdCardOrderController::class, 'show']);
         Route::post('preview-zip', [IdCardOrderController::class, 'previewZip']);
         Route::post('/', [IdCardOrderController::class, 'store']);
-        Route::post('{id}/pay-mock', [IdCardOrderController::class, 'payMock']);
+        Route::post('{id}/initiate-payment', [IdCardOrderController::class, 'initiatePayment']);
+        Route::post('{id}/pay-mock', [IdCardOrderController::class, 'payMock']); // local dev only
     });
 
     // Guru Wali (Academic Advisor)
@@ -255,6 +266,12 @@ Route::middleware("auth:sanctum")->group(function () {
         Route::get('students/{studentId}/notes', [\App\Http\Controllers\Api\GuruWaliController::class, 'getNotes']);
         Route::post('students/{studentId}/notes', [\App\Http\Controllers\Api\GuruWaliController::class, 'storeNote']);
         Route::delete('notes/{noteId}', [\App\Http\Controllers\Api\GuruWaliController::class, 'destroyNote']);
+    });
+
+    // Tenant Billing & Plan Upgrade
+    Route::prefix('billing')->group(function () {
+        Route::get('subscription', [TenantBillingController::class, 'currentSubscription']);
+        Route::post('upgrade', [TenantBillingController::class, 'initiateUpgrade']);
     });
 
     // Superadmin assign Guru Wali (also inside teacher assignments flow)
@@ -277,3 +294,6 @@ Route::prefix('kiosk')->group(function () {
 Route::get('attendance-token', [AttendanceTokenController::class, 'getToken']);
 Route::get('late-arrivals', [AttendanceController::class, 'getLateArrivals']);
 Route::get('student-attendances/{parent_phone}', [AttendanceController::class, 'getStudentAttendances']);
+
+// Xendit Webhook
+Route::post('webhook/xendit', [\App\Http\Controllers\Api\Webhook\XenditWebhookController::class, 'handleInvoice']);

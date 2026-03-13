@@ -47,4 +47,31 @@ class IdCardOrder extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    public function transactions()
+    {
+        return $this->morphMany(Transaction::class, 'payable');
+    }
+
+    /**
+     * Called by XenditWebhookController when payment is confirmed PAID.
+     * Moves the order status to 'processing' so the Superadmin can start fulfillment.
+     */
+    public function handlePaymentSuccess(Transaction $transaction): void
+    {
+        $this->status = 'processing';
+        $this->save();
+    }
+
+    /**
+     * Called by XenditWebhookController when the Xendit invoice expires without payment.
+     */
+    public function handlePaymentExpired(Transaction $transaction): void
+    {
+        // Only revert if still pending
+        if ($this->status === 'pending') {
+            $this->status = 'payment_failed';
+            $this->save();
+        }
+    }
 }

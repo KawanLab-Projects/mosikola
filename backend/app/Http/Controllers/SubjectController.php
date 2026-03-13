@@ -40,6 +40,45 @@ class SubjectController extends Controller
         ], 201);
     }
 
+    /** POST /subjects/defaults */
+    public function storeDefaults(Request $request)
+    {
+        $tenantId = $this->resolveTenantId($request);
+
+        // Check if any subject already exists for this tenant
+        $exists = \App\Models\Subject::where('tenant_id', $tenantId)->exists();
+        if ($exists) {
+            return response()->json([
+                'message' => 'Gagal menambahkan mata pelajaran default. Table sudah terisi.'
+            ], 400);
+        }
+
+        $defaults = [
+            ['name' => 'Pendidkan Agama & Budi Pekerti', 'code' => 'PABP'],
+            ['name' => 'Pendidikan Pancasila dan Kewarganegaraan', 'code' => 'PPKn'],
+            ['name' => 'Bahasa Indonesia', 'code' => 'BIND'],
+            ['name' => 'Bahasa Inggris', 'code' => 'BING'],
+            ['name' => 'Matematika', 'code' => 'MTK'],
+            ['name' => 'Pendidikan Jasmani, Olahraga & Kesehatan', 'code' => 'PJOK'],
+            ['name' => 'Seni Budaya', 'code' => 'SBD'],
+            ['name' => 'Informatika', 'code' => 'INFO'],
+        ];
+
+        $data = array_map(function ($item) use ($tenantId) {
+            return array_merge($item, [
+                'tenant_id'  => $tenantId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }, $defaults);
+
+        $this->service->storeMany($data);
+
+        return response()->json([
+            'message' => 'Mata pelajaran default berhasil ditambahkan.',
+        ], 201);
+    }
+
     /** GET /subjects/{id} */
     public function show($public_id)
     {

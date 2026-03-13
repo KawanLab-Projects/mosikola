@@ -34,6 +34,11 @@ class StudyProgramRepository implements StudyProgramRepoInterface
         return StudyProgram::create($data)->makeHidden(['id']);
     }
 
+    public function createMany(array $data): void
+    {
+        StudyProgram::insert($data);
+    }
+
     public function update(int $id, array $data): bool
     {
         $studyProgram = StudyProgram::findOrFail($id);

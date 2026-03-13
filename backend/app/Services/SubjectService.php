@@ -18,6 +18,11 @@ class SubjectService
         return Subject::create($data);
     }
 
+    public function storeMany(array $data): void
+    {
+        Subject::insert($data);
+    }
+
     public function getByPublicId(string $publicId): ?Subject
     {
         return Subject::where('public_id', $publicId)->first();

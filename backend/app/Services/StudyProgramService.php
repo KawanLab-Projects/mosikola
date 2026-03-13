@@ -36,6 +36,11 @@ class StudyProgramService
         return $this->studyProgramRepo->create($data);
     }
 
+    public function storeMany(array $data): void
+    {
+        $this->studyProgramRepo->createMany($data);
+    }
+
     public function update(string $public_id, array $data): bool
     {
         $studyProgram = $this->getByPublicId($public_id);

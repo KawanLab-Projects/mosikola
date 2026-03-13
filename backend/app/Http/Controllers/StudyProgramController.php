@@ -40,6 +40,31 @@ class StudyProgramController extends Controller
         ], 201);
     }
 
+    /** POST /study-programs/bulk */
+    public function bulkStore(Request $request)
+    {
+        $validated = $request->validate([
+            'items'         => 'required|array|min:1',
+            'items.*.name'  => 'required|string|max:255',
+            'items.*.short' => 'required|string|max:50',
+        ]);
+
+        $tenantId = $this->resolveTenantId($request);
+        $data = array_map(function ($item) use ($tenantId) {
+            return array_merge($item, [
+                'tenant_id'  => $tenantId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }, $validated['items']);
+
+        $this->service->storeMany($data);
+
+        return response()->json([
+            'message' => 'Banyak jurusan berhasil ditambahkan.',
+        ], 201);
+    }
+
     public function show($public_id)
     {
         $studyProgram = $this->service->getByPublicId($public_id);

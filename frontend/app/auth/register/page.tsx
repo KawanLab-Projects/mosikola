@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Check, Shield, Building2, User, Mail, Phone, Loader2, Globe } from "lucide-react";
+import { Check, Shield, Building2, User, Mail, Phone, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -91,7 +91,7 @@ export default function RegisterPage() {
         const formData = new FormData(e.currentTarget);
         const data = {
             school_name: formData.get("school_name"),
-            slug: formData.get("subdomain"),
+            slug: subdomain || (formData.get("school_name") ? slugify(formData.get("school_name") as string) : ""),
             school_type: schoolType,
             email: formData.get("email"),
             pic_name: formData.get("pic_name"),
@@ -235,27 +235,7 @@ export default function RegisterPage() {
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="subdomain">Subdomain Sekolah (Calon URL)</Label>
-                                        <div className="relative">
-                                            <Globe className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                            <Input
-                                                id="subdomain"
-                                                name="subdomain"
-                                                placeholder="nama-sekolah"
-                                                className="pl-9 font-mono text-sm lowercase tracking-wider"
-                                                required
-                                                value={subdomain}
-                                                onChange={(e) => setSubdomain(slugify(e.target.value))}
-                                            />
-                                            <div className="absolute right-3 top-2.5 text-[10px] font-bold text-muted-foreground/50">
-                                                .mosikola.com
-                                            </div>
-                                        </div>
-                                        <p className="text-[10px] text-muted-foreground">
-                                            Ini akan menjadi alamat akses sekolah Anda nantinya.
-                                        </p>
-                                    </div>
+
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-2">

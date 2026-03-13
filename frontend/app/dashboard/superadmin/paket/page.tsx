@@ -21,6 +21,7 @@ interface PlanFeatures {
     piket?: boolean
     bimbingan_konseling?: boolean
     import_schedule?: boolean
+    kiosk?: boolean
     ai_counseling?: boolean
     basic_ews?: boolean
     ai_analytics?: boolean
@@ -66,6 +67,7 @@ export default function PlansPage() {
         features_absensi_mapel: true,
         features_piket: true,
         features_bimbingan_konseling: true,
+        features_kiosk: true,
         // Premium features (off by default)
         features_import_schedule: false,
         features_ai_counseling: false,
@@ -108,6 +110,7 @@ export default function PlansPage() {
                 features_jurnal_mapel: plan.features?.jurnal_mapel ?? true,
                 features_absensi_mapel: plan.features?.absensi_mapel ?? true,
                 features_piket: plan.features?.piket ?? true,
+                features_kiosk: plan.features?.kiosk ?? true,
                 features_bimbingan_konseling: plan.features?.bimbingan_konseling ?? true,
                 features_import_schedule: plan.features?.import_schedule || false,
                 features_ai_counseling: plan.features?.ai_counseling || false,
@@ -135,6 +138,7 @@ export default function PlansPage() {
                 features_absensi_mapel: true,
                 features_piket: true,
                 features_bimbingan_konseling: true,
+                features_kiosk: true,
                 // Premium features
                 features_import_schedule: false,
                 features_ai_counseling: false,
@@ -322,6 +326,10 @@ export default function PlansPage() {
                                 <div className="flex items-center space-x-2">
                                     <Checkbox id="f-bk" checked={formData.features_bimbingan_konseling} onCheckedChange={(c: boolean | "indeterminate") => setFormData({ ...formData, features_bimbingan_konseling: c === true })} />
                                     <Label htmlFor="f-bk">Bimbingan Konseling</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox id="f-kiosk" checked={formData.features_kiosk} onCheckedChange={(c: boolean | "indeterminate") => setFormData({ ...formData, features_kiosk: c === true })} />
+                                    <Label htmlFor="f-kiosk">Anjungan Sekolah</Label>
                                 </div>
                             </div>
                         </div>

@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessIdCardZip;
 use App\Models\IdCardTemplate;
 use App\Models\IdCardOrder;
 use App\Models\Student;
+use App\Models\Transaction;
+use App\Services\XenditService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\File;
-use ZipArchive;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 
@@ -73,68 +75,43 @@ class IdCardOrderController extends Controller
     public function previewZip(Request $request)
     {
         $request->validate([
-            'zip_file' => 'required|file|mimes:zip|max:51200', // 50MB max
-            'template_id' => 'required|exists:id_card_templates,public_id'
+            'zip_file'    => 'required|file|mimes:zip|max:102400', // 100MB max
+            'template_id' => 'required|exists:id_card_templates,public_id',
         ]);
 
         /** @var \App\Models\User $user */
-        $user = auth()->user();
+        $user       = auth()->user();
         $tenantUser = $user->tenantUsers()->where('is_active', true)->first();
         abort_if(!$tenantUser && !$request->hasHeader('X-Tenant-Id'), 403, 'Akses ditolak.');
-        $tenantId = $request->header('X-Tenant-Id') ?? $tenantUser->tenant_id;
-        $file = $request->file('zip_file');
+        $tenantId   = $request->header('X-Tenant-Id') ?? $tenantUser->tenant_id;
 
-        $zip = new ZipArchive();
-        $res = $zip->open($file->getPathname());
+        // Save ZIP to local storage (worker will pick it up)
+        $jobId    = (string) Str::uuid();
+        $zipPath  = 'temp_zips/uploads/' . $jobId . '.zip';
+        Storage::disk('local')->put($zipPath, file_get_contents($request->file('zip_file')->getPathname()));
 
-        if ($res !== TRUE) {
-            return response()->json(['message' => 'Failed to open ZIP file'], 400);
+        // Initialise the cache entry immediately so the frontend can start polling
+        Cache::put('zip_job:' . $jobId, [
+            'status'  => 'queued',
+            'current' => 0,
+            'total'   => 0,
+        ], 1800);
+
+        // Dispatch the background job
+        ProcessIdCardZip::dispatch($jobId, (int) $tenantId, $zipPath);
+
+        return response()->json(['job_id' => $jobId]);
+    }
+
+    public function zipJobStatus(string $jobId)
+    {
+        $data = Cache::get('zip_job:' . $jobId);
+
+        if (!$data) {
+            return response()->json(['status' => 'not_found'], 404);
         }
 
-        $tmpDir = 'temp_zips/' . Str::random(10);
-        $extractPath = Storage::disk('local')->path($tmpDir);
-        Storage::disk('local')->makeDirectory($tmpDir);
-        $zip->extractTo($extractPath);
-        $zip->close();
-
-        // Scan extracted files
-        $valid = [];
-        $invalid = [];
-
-        $files = File::allFiles($extractPath);
-        foreach ($files as $f) {
-            $filename = $f->getFilename();
-            $nisn = pathinfo($filename, PATHINFO_FILENAME);
-            $ext = strtolower($f->getExtension());
-
-            if (!in_array($ext, ['jpg', 'jpeg', 'png'])) continue;
-
-            // Find student
-            $student = Student::where('tenant_id', $tenantId)->where('nisn', $nisn)->first();
-
-            if ($student) {
-                // Move file to permanent location on R2 (s3 disk)
-                $newPath = 'student_photos/' . $tenantId . '/' . Str::random(15) . '.' . $ext;
-                // Read from local tmp, write to s3
-                Storage::disk('s3')->put($newPath, file_get_contents($f->getPathname()));
-
-                $valid[] = [
-                    'student' => $student,
-                    'photo_url' => Storage::disk('s3')->url($newPath),
-                    'photo_path' => $newPath
-                ];
-            } else {
-                $invalid[] = $filename;
-            }
-        }
-
-        // Cleanup temporary extraction folder
-        Storage::disk('local')->deleteDirectory($tmpDir);
-
-        return response()->json([
-            'valid' => $valid,
-            'invalid' => $invalid
-        ]);
+        return response()->json($data);
     }
 
     public function show($id)
@@ -224,8 +201,90 @@ class IdCardOrderController extends Controller
         }
     }
 
+    /**
+     * Initiate payment via Xendit for a pending IdCardOrder.
+     * Creates a Transaction record, calls Xendit Invoice API and returns the invoice URL.
+     */
+    public function initiatePayment(Request $request, $id)
+    {
+        $order = IdCardOrder::with(['tenant', 'template'])->where('id', $id)->firstOrFail();
+
+        if ($order->status !== 'pending') {
+            return response()->json(['message' => 'Order tidak dalam status pending'], 400);
+        }
+
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $tenantUser = $user->tenantUsers()->where('is_active', true)->first();
+        abort_if(!$tenantUser, 403, 'Akses ditolak.');
+
+        // Prevent duplicate payment initiations (idempotency)
+        $existingTx = $order->transactions()->where('status', 'PENDING')->first();
+        if ($existingTx) {
+            return response()->json([
+                'invoice_url'    => $existingTx->xendit_invoice_url,
+                'transaction_id' => $existingTx->id,
+                'reference_id'   => $existingTx->reference_id,
+            ]);
+        }
+
+        $referenceId = 'KARTU-' . strtoupper($id) . '-' . strtoupper(Str::random(6));
+
+        // Create the transaction record first (PENDING)
+        $transaction = Transaction::create([
+            'tenant_id'    => $order->tenant_id,
+            'reference_id' => $referenceId,
+            'payable_type' => IdCardOrder::class,
+            'payable_id'   => $order->id,
+            'amount'       => $order->total_price,
+            'status'       => 'PENDING',
+        ]);
+
+        $invoiceUrl = null;
+        $xenditInvoiceId = null;
+
+        // Only call Xendit if a secret key is configured (skip in local mock mode)
+        if (config('services.xendit.secret_key')) {
+            try {
+                $xenditService = app(XenditService::class);
+                $invoice = $xenditService->createInvoice([
+                    'external_id' => $referenceId,
+                    'amount'      => (int) $order->total_price,
+                    'description' => 'Pembayaran Kartu Siswa – Order ' . $order->id,
+                    'payer_email' => $user->email,
+                    'success_redirect_url' => config('app.frontend_url', config('app.url')) . '/dashboard/kartu-siswa?status=success',
+                    'failure_redirect_url' => config('app.frontend_url', config('app.url')) . '/dashboard/kartu-siswa?status=failed',
+                ]);
+
+                $invoiceUrl      = $invoice['invoice_url'] ?? null;
+                $xenditInvoiceId = $invoice['id'] ?? null;
+            } catch (\Throwable $e) {
+                // Rollback the transaction record and surface the error
+                $transaction->delete();
+                return response()->json(['message' => $e->getMessage()], 502);
+            }
+        }
+
+        // Persist the Xendit invoice details
+        $transaction->xendit_invoice_url = $invoiceUrl;
+        $transaction->xendit_invoice_id  = $xenditInvoiceId;
+        $transaction->save();
+
+        return response()->json([
+            'invoice_url'    => $invoiceUrl,
+            'transaction_id' => $transaction->id,
+            'reference_id'   => $referenceId,
+        ], 201);
+    }
+
+    /**
+     * DEVELOPMENT ONLY — mock payment for local testing without hitting Xendit.
+     * Guarded to APP_ENV=local.
+     */
     public function payMock(Request $request, $id)
     {
+        abort_unless(app()->isLocal(), 403, 'Mock payments are only allowed in local environment.');
+
         $order = IdCardOrder::where('id', $id)->firstOrFail();
 
         if ($order->status !== 'pending') {
@@ -237,6 +296,7 @@ class IdCardOrderController extends Controller
 
         return response()->json($order);
     }
+
     public function updateNfcUid(Request $request, $id, $studentPublicId)
     {
         $request->validate([

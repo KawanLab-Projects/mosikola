@@ -44,6 +44,7 @@ const DEFAULTS: AllSettings = {
     },
     attendance: {
         tolerance_late_minutes: "15", token_ttl_minutes: "30", absent_mode: "token", kiosk_token: "",
+        kiosk_inactivity_timeout_minutes: "20",
     },
     discipline: {
         notify_threshold: "3", parent_notify_mode: "none", points_validity: "academic_year",
@@ -526,7 +527,7 @@ export default function PengaturanPage() {
                                         </Button>
                                     </div>
                                     <p className="text-xs text-muted-foreground">
-                                        Digunakan pada URL Anjungan: <code className="bg-muted px-1 rounded">/kiosk/token-anda</code>
+                                        Digunakan pada URL Anjungan: <code className="bg-muted px-1 rounded">/kiosk</code> atau <code className="bg-muted px-1 rounded">/lite-kiosk</code>
                                     </p>
                                 </div>
                             </div>
@@ -563,6 +564,28 @@ export default function PengaturanPage() {
                                     </div>
                                     <p className="text-xs text-muted-foreground">
                                         Setelah durasi ini habis, token absen tidak dapat digunakan.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label className="flex items-center gap-1.5">
+                                        <Timer className="h-3.5 w-3.5 text-muted-foreground" />
+                                        Waktu Tidak Aktif Kiosk
+                                    </Label>
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="number"
+                                            min={1}
+                                            max={480}
+                                            value={settings.attendance.kiosk_inactivity_timeout_minutes}
+                                            onChange={e => set("attendance", "kiosk_inactivity_timeout_minutes", e.target.value)}
+                                            className="w-28"
+                                        />
+                                        <span className="text-sm text-muted-foreground">menit</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        Setelah kiosk tidak aktif selama durasi ini, absensi siswa akan otomatis tersinkronisasi ke server.
                                     </p>
                                 </div>
                             </div>

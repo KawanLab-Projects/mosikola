@@ -11,7 +11,8 @@ import {
   Users,
   FileText,
   GraduationCap,
-  IdCard
+  IdCard,
+  DollarSign
 } from "lucide-react"
 
 import { NavMain } from "./nav-main";
@@ -60,7 +61,7 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: Home,
     },
     {
@@ -115,6 +116,19 @@ const data = {
         {
           title: "Artificial Inteligence",
           url: "/dashboard/superadmin/ai",
+        },
+      ],
+    },
+    {
+      title: "Finansial",
+      url: "#",
+      icon: DollarSign,
+      isActive: true,
+      roles: ["superadmin"],
+      items: [
+        {
+          title: "Xendit (Payment)",
+          url: "/dashboard/superadmin/xendit",
         },
       ],
     },

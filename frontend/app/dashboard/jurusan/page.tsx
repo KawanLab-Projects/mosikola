@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Pencil, Trash2, Search } from "lucide-react"
+import { Plus, Pencil, Trash2, Search, X } from "lucide-react"
 import { api } from "@/lib/api"
 import { StudyProgram, StudyProgramInput } from "@/types"
 import { Button } from "@/components/ui/button"
@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function JurusanPage() {
     const [jurusans, setJurusans] = useState<StudyProgram[]>([])
@@ -46,17 +47,20 @@ export default function JurusanPage() {
     const [selectedJurusan, setSelectedJurusan] = useState<StudyProgram | null>(null)
 
     // Form state
+    const [addMode, setAddMode] = useState<"single" | "bulk">("single")
     const [formData, setFormData] = useState<StudyProgramInput>({
         name: "",
         short: "",
     })
+    const [bulkData, setBulkData] = useState<StudyProgramInput[]>([
+        { name: "", short: "" }
+    ])
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const fetchJurusans = async () => {
         setIsLoading(true)
         try {
             const response = await api.get('/study-programs')
-            // Handle different response structures (e.g., if wrapped in 'data')
             const data = response.data.data || response.data
             setJurusans(Array.isArray(data) ? data : [])
         } catch (error) {
@@ -78,25 +82,58 @@ export default function JurusanPage() {
                 name: jurusan.name,
                 short: jurusan.short,
             })
+            setAddMode("single")
         } else {
             setSelectedJurusan(null)
             setFormData({
                 name: "",
                 short: "",
             })
+            setBulkData([{ name: "", short: "" }])
+            setAddMode("single")
         }
         setIsDialogOpen(true)
+    }
+
+    const handleAddBulkRow = () => {
+        setBulkData([...bulkData, { name: "", short: "" }])
+    }
+
+    const handleRemoveBulkRow = (index: number) => {
+        if (bulkData.length > 1) {
+            const newBulkData = [...bulkData]
+            newBulkData.splice(index, 1)
+            setBulkData(newBulkData)
+        }
+    }
+
+    const handleBulkChange = (index: number, field: keyof StudyProgramInput, value: string) => {
+        const newBulkData = [...bulkData]
+        newBulkData[index][field] = value
+        setBulkData(newBulkData)
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsSubmitting(true)
+
         try {
             if (selectedJurusan) {
                 await api.put(`/study-programs/${selectedJurusan.public_id}`, formData)
                 toast.success("Jurusan berhasil diperbarui")
             } else {
-                await api.post('/study-programs', formData)
+                if (addMode === "single") {
+                    await api.post('/study-programs', formData)
+                } else {
+                    // Filter out empty rows
+                    const items = bulkData.filter(item => item.name.trim() !== "" || item.short.trim() !== "")
+                    if (items.length === 0) {
+                        toast.error("Mohon isi setidaknya satu data jurusan")
+                        setIsSubmitting(false)
+                        return
+                    }
+                    await api.post('/study-programs/bulk', { items })
+                }
                 toast.success("Jurusan berhasil ditambahkan")
             }
             setIsDialogOpen(false)
@@ -213,7 +250,7 @@ export default function JurusanPage() {
 
             {/* Create/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent>
+                <DialogContent className={addMode === "bulk" && !selectedJurusan ? "max-w-2xl" : "max-w-md"}>
                     <DialogHeader>
                         <DialogTitle>
                             {selectedJurusan ? "Edit Jurusan" : "Tambah Jurusan Baru"}
@@ -222,36 +259,122 @@ export default function JurusanPage() {
                             Isi informasi jurusan di bawah ini. Klik simpan untuk melakukan perubahan.
                         </DialogDescription>
                     </DialogHeader>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="nama_jurusan">Nama Jurusan</Label>
-                            <Input
-                                id="nama_jurusan"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                placeholder="Contoh: Rekayasa Perangkat Lunak"
-                                required
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="kode_jurusan">Kode Jurusan</Label>
-                            <Input
-                                id="kode_jurusan"
-                                value={formData.short}
-                                onChange={(e) => setFormData({ ...formData, short: e.target.value })}
-                                placeholder="Contoh: RPL"
-                                required
-                            />
-                        </div>
-                        <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                                Batal
-                            </Button>
-                            <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting ? "Menyimpan..." : "Simpan"}
-                            </Button>
-                        </DialogFooter>
-                    </form>
+
+                    {!selectedJurusan ? (
+                        <Tabs defaultValue="single" value={addMode} onValueChange={(v) => setAddMode(v as any)} className="w-full">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="single">Single</TabsTrigger>
+                                <TabsTrigger value="bulk">Tambah Banyak</TabsTrigger>
+                            </TabsList>
+                            <form onSubmit={handleSubmit} className="mt-4">
+                                <TabsContent value="single" className="space-y-4 py-2">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="name">Nama Jurusan</Label>
+                                        <Input
+                                            id="name"
+                                            value={formData.name}
+                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                            placeholder="Contoh: Rekayasa Perangkat Lunak"
+                                            required={addMode === "single"}
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="short">Kode Jurusan</Label>
+                                        <Input
+                                            id="short"
+                                            value={formData.short}
+                                            onChange={(e) => setFormData({ ...formData, short: e.target.value })}
+                                            placeholder="Contoh: RPL"
+                                            required={addMode === "single"}
+                                        />
+                                    </div>
+                                </TabsContent>
+
+                                <TabsContent value="bulk" className="space-y-4">
+                                    <div className="max-h-[300px] overflow-y-auto space-y-3 pr-2">
+                                        {bulkData.map((item, index) => (
+                                            <div key={index} className="flex gap-3 items-end border p-3 rounded-lg bg-slate-50 relative">
+                                                <div className="grid gap-2 flex-1">
+                                                    <Label>Nama Jurusan</Label>
+                                                    <Input
+                                                        value={item.name}
+                                                        onChange={(e) => handleBulkChange(index, "name", e.target.value)}
+                                                        placeholder="Nama"
+                                                    />
+                                                </div>
+                                                <div className="grid gap-2 w-24">
+                                                    <Label>Kode</Label>
+                                                    <Input
+                                                        value={item.short}
+                                                        onChange={(e) => handleBulkChange(index, "short", e.target.value)}
+                                                        placeholder="Kode"
+                                                    />
+                                                </div>
+                                                {bulkData.length > 1 && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="text-red-500 h-9 w-9"
+                                                        onClick={() => handleRemoveBulkRow(index)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="w-full border-dashed"
+                                        onClick={handleAddBulkRow}
+                                    >
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Tambah Baris
+                                    </Button>
+                                </TabsContent>
+
+                                <DialogFooter className="mt-6">
+                                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                                        Batal
+                                    </Button>
+                                    <Button type="submit" disabled={isSubmitting}>
+                                        {isSubmitting ? "Menyimpan..." : "Simpan"}
+                                    </Button>
+                                </DialogFooter>
+                            </form>
+                        </Tabs>
+                    ) : (
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="edit_name">Nama Jurusan</Label>
+                                <Input
+                                    id="edit_name"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="edit_short">Kode Jurusan</Label>
+                                <Input
+                                    id="edit_short"
+                                    value={formData.short}
+                                    onChange={(e) => setFormData({ ...formData, short: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <DialogFooter>
+                                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                                    Batal
+                                </Button>
+                                <Button type="submit" disabled={isSubmitting}>
+                                    {isSubmitting ? "Menyimpan..." : "Simpan"}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    )}
                 </DialogContent>
             </Dialog>
 
@@ -279,4 +402,4 @@ export default function JurusanPage() {
             </AlertDialog>
         </div>
     )
-}
+}

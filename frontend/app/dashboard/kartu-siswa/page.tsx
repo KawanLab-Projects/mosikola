@@ -70,6 +70,8 @@ type OrderSuccess = {
     total_qty?: number
     payment_method: string
     total_price: string
+    invoice_url?: string | null  // Xendit invoice URL (null when Xendit not configured)
+    reference_id?: string
 }
 
 
@@ -85,6 +87,9 @@ export default function OrderKartuSiswaPage() {
     // Step 2: ZIP Upload & Preview
     const [zipFile, setZipFile] = useState<File | null>(null)
     const [uploadingZip, setUploadingZip] = useState(false)
+    const [uploadProgress, setUploadProgress] = useState(0)
+    const [processingStatus, setProcessingStatus] = useState<{ current: number, total: number } | null>(null)
+    const [queueError, setQueueError] = useState<string | null>(null)
     const [previewData, setPreviewData] = useState<PreviewData>({ valid: [], invalid: [] })
 
     // Step 3: Checkout Form
@@ -93,12 +98,29 @@ export default function OrderKartuSiswaPage() {
     const [cardType, setCardType] = useState<"rfid" | "regular">("rfid")
     const [submittingOrder, setSubmittingOrder] = useState(false)
 
-    // Step 4: Success
+    // Step 4: Success & Payment
     const [orderSuccess, setOrderSuccess] = useState<OrderSuccess | null>(null)
+    const [initiatingPayment, setInitiatingPayment] = useState(false)
 
     useEffect(() => {
         fetchTemplates()
+        prefillShipping()
     }, [])
+
+    const prefillShipping = async () => {
+        try {
+            const res = await api.get('/auth/me')
+            const user = res.data.user
+            const settings = res.data.tenant_settings ?? {}
+            setShipping({
+                name: user?.name ?? '',
+                phone: settings.notify?.whatsapp_admin_number ?? '',
+                address: settings.school?.school_address ?? '',
+            })
+        } catch {
+            // Prefill is best-effort; silently ignore errors
+        }
+    }
 
     const fetchTemplates = async () => {
         try {
@@ -124,22 +146,57 @@ export default function OrderKartuSiswaPage() {
 
         try {
             setUploadingZip(true)
+            setUploadProgress(0)
+            setProcessingStatus(null)
+            setQueueError(null)
+
             const formData = new FormData()
             formData.append('zip_file', zipFile)
             formData.append('template_id', selectedTemplate.public_id)
 
             const res = await api.post('/id-card-orders/preview-zip', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+                headers: { 'Content-Type': 'multipart/form-data' },
+                onUploadProgress: (e) => {
+                    if (e.total) {
+                        setUploadProgress(Math.round((e.loaded / e.total) * 100))
+                    }
+                },
             })
 
-            setPreviewData(res.data)
-            setStep(3)
+            const { job_id } = res.data
+            startPollingStatus(job_id)
         } catch (unknownError: unknown) {
             const msg = (unknownError as { response?: { data?: { message?: string } } })?.response?.data?.message
-            toast.error(msg || "Gagal memproses file ZIP")
-        } finally {
+            toast.error(msg || "Gagal mengunggah file ZIP")
             setUploadingZip(false)
+            setUploadProgress(0)
         }
+    }
+
+    const startPollingStatus = (jobId: string) => {
+        const interval = setInterval(async () => {
+            try {
+                const res = await api.get(`/id-card-orders/zip-jobs/${jobId}`)
+                const data = res.data
+
+                if (data.status === 'processing') {
+                    setProcessingStatus({ current: data.current, total: data.total })
+                } else if (data.status === 'done') {
+                    clearInterval(interval)
+                    setPreviewData(data.result)
+                    setUploadingZip(false)
+                    setProcessingStatus(null)
+                    setStep(3)
+                } else if (data.status === 'failed') {
+                    clearInterval(interval)
+                    setQueueError(data.message)
+                    setUploadingZip(false)
+                    toast.error(data.message || "Gagal memproses file ZIP")
+                }
+            } catch (error) {
+                console.error("Polling error:", error)
+            }
+        }, 2000)
     }
 
     const handleCheckout = async () => {
@@ -166,8 +223,25 @@ export default function OrderKartuSiswaPage() {
             }
 
             const res = await api.post('/id-card-orders', payload)
+            const order = res.data
 
-            setOrderSuccess(res.data)
+            // Immediately initiate payment to get Xendit invoice URL
+            setInitiatingPayment(true)
+            try {
+                const payRes = await api.post(`/id-card-orders/${order.id}/initiate-payment`)
+                setOrderSuccess({
+                    ...order,
+                    invoice_url: payRes.data.invoice_url ?? null,
+                    reference_id: payRes.data.reference_id,
+                })
+            } catch {
+                // Payment initiation failed, but order was created — still show order
+                setOrderSuccess({ ...order, invoice_url: null })
+                toast.warning("Pesanan berhasil dibuat, namun gagal membuat invoice pembayaran. Hubungi admin.")
+            } finally {
+                setInitiatingPayment(false)
+            }
+
             setStep(4)
         } catch (unknownError: unknown) {
             const msg = (unknownError as { response?: { data?: { message?: string } } })?.response?.data?.message
@@ -381,6 +455,59 @@ export default function OrderKartuSiswaPage() {
                             <Button onClick={handleZipUpload} disabled={!zipFile || uploadingZip} size="lg" className="w-full max-w-xs">
                                 {uploadingZip ? "Memproses Zip..." : "Proses & Review"}
                             </Button>
+
+                            {/* Upload Progress Bar */}
+                            {uploadingZip && (
+                                <div className="w-full max-w-xs mt-4 space-y-2">
+                                    <div className="flex justify-between text-xs text-muted-foreground">
+                                        <span>
+                                            {uploadProgress < 100
+                                                ? "Mengunggah file..."
+                                                : processingStatus
+                                                    ? `Memproses foto: ${processingStatus.current} / ${processingStatus.total}`
+                                                    : "Memproses foto siswa..."
+                                            }
+                                        </span>
+                                        <span>
+                                            {uploadProgress < 100
+                                                ? `${uploadProgress}%`
+                                                : processingStatus
+                                                    ? `${Math.round((processingStatus.current / processingStatus.total) * 100)}%`
+                                                    : "..."
+                                            }
+                                        </span>
+                                    </div>
+                                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-primary rounded-full transition-all duration-300 ease-out"
+                                            style={{
+                                                width: uploadProgress < 100
+                                                    ? `${uploadProgress}%`
+                                                    : processingStatus
+                                                        ? `${(processingStatus.current / processingStatus.total) * 100}%`
+                                                        : '100%'
+                                            }}
+                                        />
+                                    </div>
+                                    {(uploadProgress === 100 && !processingStatus) && (
+                                        <p className="text-xs text-center text-muted-foreground animate-pulse">
+                                            Menunggu antrian server...
+                                        </p>
+                                    )}
+                                    {processingStatus && (
+                                        <p className="text-xs text-center text-muted-foreground">
+                                            Sedang mengunggah foto ke CDN Cloudflare...
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+
+                            {queueError && (
+                                <div className="mt-4 p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-100 flex items-start gap-2">
+                                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                    <span>{queueError}</span>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
@@ -588,12 +715,40 @@ export default function OrderKartuSiswaPage() {
                                 </div>
                             </div>
 
+                            {/* Payment section */}
                             {orderSuccess.status === 'pending' && (
-                                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 text-center">
-                                    <p className="text-sm font-medium mb-3">Simulasi Pembayaran (DEV MODE)</p>
-                                    <Button onClick={handleMockPay} className="w-full bg-blue-600 hover:bg-blue-700">
-                                        Mock &quot;Pay Now&quot; Success
-                                    </Button>
+                                <div className="rounded-xl border overflow-hidden">
+                                    {orderSuccess.invoice_url ? (
+                                        // Real Xendit payment — redirect to invoice URL
+                                        <div className="bg-blue-50 dark:bg-blue-900/20 p-6 text-center">
+                                            <p className="text-sm text-muted-foreground mb-1">Selesaikan pembayaran melalui Xendit</p>
+                                            <p className="text-xs text-muted-foreground mb-4">Anda dapat memilih metode VA, QRIS, atau E-Wallet di halaman Xendit.</p>
+                                            <Button
+                                                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                                                size="lg"
+                                                onClick={() => window.open(orderSuccess.invoice_url!, '_blank')}
+                                            >
+                                                <CreditCard className="mr-2 w-4 h-4" />
+                                                Bayar Sekarang via Xendit
+                                            </Button>
+                                            <p className="text-xs text-muted-foreground mt-3">Halaman ini akan otomatis diperbarui setelah pembayaran selesai.</p>
+                                        </div>
+                                    ) : initiatingPayment ? (
+                                        // Still generating invoice
+                                        <div className="bg-muted/30 p-6 text-center flex items-center justify-center gap-2 text-muted-foreground">
+                                            <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                            Membuat invoice pembayaran...
+                                        </div>
+                                    ) : (
+                                        // Xendit not configured — show dev mock button
+                                        <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-xl border border-amber-200 text-center">
+                                            <p className="text-sm font-medium text-amber-800 dark:text-amber-300 mb-1">Mode Pengembangan</p>
+                                            <p className="text-xs text-amber-700 dark:text-amber-400 mb-3">Xendit belum dikonfigurasi. Gunakan mock payment untuk testing.</p>
+                                            <Button onClick={handleMockPay} className="w-full bg-amber-600 hover:bg-amber-700">
+                                                Simulasi Pembayaran Sukses
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </CardContent>

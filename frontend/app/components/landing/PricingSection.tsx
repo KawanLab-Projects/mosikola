@@ -28,6 +28,7 @@ const FEATURE_LABELS: Record<string, string> = {
     absensi_mapel: "Absensi Mapel",
     piket: "Piket",
     bimbingan_konseling: "Bimbingan Konseling",
+    kiosk: "Anjungan Sekolah",
     // Premium features
     import_schedule: "Import Jadwal XML",
     ai_counseling: "AI Helper Bimbingan Konseling",
@@ -46,8 +47,8 @@ function formatRp(value: string | number): string {
 }
 
 function getCapacityLabel(plan: Plan): string {
-    const teacher = plan.teacher_limit === 0 ? "Unlimited Guru" : `Maks ${plan.teacher_limit} Guru`
-    const student = plan.student_limit === 0 ? "Unlimited Siswa" : `Maks ${plan.student_limit} Siswa`
+    const teacher = plan.teacher_limit === 0 ? "Jumlah Guru tak terbatas" : `Maks ${plan.teacher_limit} Guru`
+    const student = plan.student_limit === 0 ? "Jumlah Siswa tak terbatas" : `Maks ${plan.student_limit} Siswa`
     return `${teacher}, ${student}`
 }
 
@@ -58,6 +59,7 @@ const DEFAULT_FEATURE_KEYS = [
     "absensi_mapel",
     "piket",
     "bimbingan_konseling",
+    "kiosk"
 ]
 
 const PREMIUM_FEATURE_KEYS = [
@@ -180,7 +182,7 @@ export function PricingSection() {
                                 <>
                                     <div className="flex items-start gap-2 text-muted-foreground">
                                         <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                                        <span className="italic">Semua fitur di Free plan</span>
+                                        <span className="italic">Semua fitur di Freemium</span>
                                     </div>
                                     {premiumFeatures.map((label: string) => (
                                         <div key={label} className="flex items-start gap-2 text-muted-foreground">

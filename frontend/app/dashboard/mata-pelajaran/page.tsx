@@ -153,9 +153,31 @@ export default function MataPelajaranPage() {
                         Kelola daftar mata pelajaran yang diajarkan di sekolah Anda.
                     </p>
                 </div>
-                <Button className="gap-2 shrink-0" onClick={() => { setAddForm(EMPTY_FORM); setAddOpen(true) }}>
-                    <Plus className="h-4 w-4" /> Tambah Mata Pelajaran
-                </Button>
+                <div className="flex flex-wrap gap-2 shrink-0">
+                    {subjects.length === 0 && !isLoading && (
+                        <Button 
+                            variant="outline" 
+                            className="gap-2 border-dashed border-primary hover:bg-primary/5 text-primary"
+                            onClick={async () => {
+                                setIsLoading(true)
+                                try {
+                                    await api.post("/subjects/defaults")
+                                    toast.success("Mata pelajaran default berhasil ditambahkan")
+                                    fetchSubjects()
+                                } catch (err: unknown) {
+                                    const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+                                    toast.error(msg || "Gagal menambahkan mata pelajaran default")
+                                    setIsLoading(false)
+                                }
+                            }}
+                        >
+                            <Plus className="h-4 w-4" /> Tambah Mapel Default
+                        </Button>
+                    )}
+                    <Button className="gap-2" onClick={() => { setAddForm(EMPTY_FORM); setAddOpen(true) }}>
+                        <Plus className="h-4 w-4" /> Tambah Mata Pelajaran
+                    </Button>
+                </div>
             </div>
 
             {/* Search */}
