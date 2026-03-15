@@ -64,6 +64,29 @@ export default function TahunAjaranPage() {
     const [classrooms, setClassrooms] = useState<Classroom[]>([])
     const [selectedClassroom, setSelectedClassroom] = useState("")
     const [isDemoting, setIsDemoting] = useState(false)
+ 
+    // Suggestion logic
+    const [suggestedYear, setSuggestedYear] = useState<{ name: string; start: string; end: string } | null>(null)
+ 
+    useEffect(() => {
+        if (isLoading) return
+        const today = new Date()
+        const currentYear = today.getFullYear()
+        const threshold = new Date(currentYear, 6, 14) // July 14
+        const cycleYear = today >= threshold ? currentYear : currentYear - 1
+        const name = `${cycleYear}/${cycleYear + 1}`
+ 
+        const exists = years.some(y => y.name === name)
+        if (!exists) {
+            setSuggestedYear({
+                name,
+                start: `${cycleYear}-07-15`,
+                end: `${cycleYear + 1}-06-30`
+            })
+        } else {
+            setSuggestedYear(null)
+        }
+    }, [years, isLoading])
 
     const fetchYears = useCallback(async () => {
         try {
@@ -194,45 +217,81 @@ export default function TahunAjaranPage() {
                             <TableRow>
                                 <TableCell colSpan={5} className="h-24 text-center">Memuat data...</TableCell>
                             </TableRow>
-                        ) : years.length === 0 ? (
+                        ) : years.length === 0 && !suggestedYear ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                                     Belum ada tahun ajaran. Buat yang pertama!
                                 </TableCell>
                             </TableRow>
-                        ) : years.map((year) => (
-                            <TableRow key={year.id}>
-                                <TableCell className="font-semibold">{year.name}</TableCell>
-                                <TableCell>{year.start_date}</TableCell>
-                                <TableCell>{year.end_date}</TableCell>
-                                <TableCell>
-                                    {year.is_active
-                                        ? <Badge className="bg-green-100 text-green-800">Aktif</Badge>
-                                        : <Badge variant="secondary">Tidak Aktif</Badge>
-                                    }
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex justify-end gap-2">
-                                        {!year.is_active && (
-                                            <Button size="sm" variant="outline" onClick={() => handleActivate(year)}>
-                                                <CheckCircle2 className="h-4 w-4 mr-1" />
-                                                Aktifkan
-                                            </Button>
-                                        )}
-                                        {year.is_active && (
-                                            <Button
-                                                size="sm"
-                                                variant="destructive"
-                                                onClick={() => setYearToClose(year)}
+                        ) : (
+                            <>
+                                {suggestedYear && (
+                                    <TableRow className="bg-amber-50/50 hover:bg-amber-50 border-amber-100">
+                                        <TableCell className="font-semibold text-amber-900">
+                                            <div className="flex items-center gap-2">
+                                                {suggestedYear.name}
+                                                <Badge className="bg-amber-100 text-amber-800 border-amber-200">Saran</Badge>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-amber-800/70 italic">Belum dibuat</TableCell>
+                                        <TableCell className="text-amber-800/70 italic">Belum dibuat</TableCell>
+                                        <TableCell>
+                                            <Badge variant="outline" className="border-amber-300 text-amber-700">Tersedia</Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <Button 
+                                                size="sm" 
+                                                className="bg-amber-600 hover:bg-amber-700 text-white"
+                                                onClick={() => {
+                                                    setFormData({
+                                                        name: suggestedYear.name,
+                                                        start_date: suggestedYear.start,
+                                                        end_date: suggestedYear.end
+                                                    })
+                                                    setIsCreateOpen(true)
+                                                }}
                                             >
-                                                <Archive className="h-4 w-4 mr-1" />
-                                                Tutup Tahun Ajaran
+                                                <Plus className="h-4 w-4 mr-1" />
+                                                Buat Sekarang
                                             </Button>
-                                        )}
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                                {years.map((year) => (
+                                    <TableRow key={year.id}>
+                                        <TableCell className="font-semibold">{year.name}</TableCell>
+                                        <TableCell>{year.start_date}</TableCell>
+                                        <TableCell>{year.end_date}</TableCell>
+                                        <TableCell>
+                                            {year.is_active
+                                                ? <Badge className="bg-green-100 text-green-800">Aktif</Badge>
+                                                : <Badge variant="secondary">Tidak Aktif</Badge>
+                                            }
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="flex justify-end gap-2">
+                                                {!year.is_active && (
+                                                    <Button size="sm" variant="outline" onClick={() => handleActivate(year)}>
+                                                        <CheckCircle2 className="h-4 w-4 mr-1" />
+                                                        Aktifkan
+                                                    </Button>
+                                                )}
+                                                {year.is_active && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="destructive"
+                                                        onClick={() => setYearToClose(year)}
+                                                    >
+                                                        <Archive className="h-4 w-4 mr-1" />
+                                                        Tutup Tahun Ajaran
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </>
+                        )}
                     </TableBody>
                 </Table>
             </div>

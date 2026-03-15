@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Plus, Pencil, Trash2, GraduationCap, BookOpen, X, UserPlus, Search, UserCheck } from "lucide-react"
+import { Plus, Pencil, Trash2, GraduationCap, BookOpen, X, UserPlus, Search, UserCheck, RotateCw } from "lucide-react"
 import { toast } from "sonner"
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -396,14 +396,28 @@ export default function GuruPage() {
                     </p>
                 </div>
 
-                {/* Add Teacher Dialog */}
-                <Dialog open={addOpen} onOpenChange={setAddOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="gap-2">
-                            <Plus className="h-4 w-4" /> Tambah Guru
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
+                <div className="flex items-center gap-2">
+                    <Button 
+                        variant="outline" 
+                        size="icon" 
+                        title="Muat ulang data"
+                        onClick={() => {
+                            fetchTeachers();
+                            fetchSupport();
+                        }}
+                        disabled={isLoading}
+                    >
+                        <RotateCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    </Button>
+
+                    {/* Add Teacher Dialog */}
+                    <Dialog open={addOpen} onOpenChange={setAddOpen}>
+                        <DialogTrigger asChild>
+                            <Button className="gap-2">
+                                <Plus className="h-4 w-4" /> Tambah Guru
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Tambah Guru Baru</DialogTitle>
                             <DialogDescription>
@@ -453,9 +467,10 @@ export default function GuruPage() {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+                </div>
             </div>
 
-            {/* Teacher Table */}
+        {/* Teacher Table */}
             <div className="rounded-md border bg-card shadow-sm">
                 <Table>
                     <TableHeader>
@@ -515,6 +530,12 @@ export default function GuruPage() {
                                                             {a.assignment_type === "guru_mapel" && a.subject
                                                                 ? ` · ${a.subject}`
                                                                 : ""}
+                                                            {a.classroom && (
+                                                                <>
+                                                                    <span className="mx-1 opacity-50">·</span>
+                                                                    {a.classroom.short || a.classroom.name}
+                                                                </>
+                                                            )}
                                                         </Badge>
                                                     )
                                                 })

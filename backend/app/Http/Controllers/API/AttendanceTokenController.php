@@ -34,9 +34,18 @@ class AttendanceTokenController extends Controller
         $token->tenant_id = $tenantSetting->tenant_id;
         $token->save();
 
+        $inactivityTimeout = (int) TenantSetting::getValue($tenantSetting->tenant_id, 'attendance', 'kiosk_inactivity_timeout_minutes', 20);
+        $schoolStartTime = TenantSetting::getValue($tenantSetting->tenant_id, 'attendance', 'school_start_time', '07:00');
+        $schoolEndTime = TenantSetting::getValue($tenantSetting->tenant_id, 'attendance', 'school_end_time', '14:00');
+
         return response()->json([
             'token' => $token->token,
-            'expires_at' => $token->expires_at
+            'expires_at' => $token->expires_at,
+            'settings' => [
+                'inactivity_timeout_minutes' => $inactivityTimeout,
+                'school_start_time' => $schoolStartTime,
+                'school_end_time' => $schoolEndTime,
+            ]
         ]);
     }
 
@@ -64,10 +73,15 @@ class AttendanceTokenController extends Controller
             20
         );
 
+        $schoolStartTime = TenantSetting::getValue($tenantSetting->tenant_id, 'attendance', 'school_start_time', '07:00');
+        $schoolEndTime = TenantSetting::getValue($tenantSetting->tenant_id, 'attendance', 'school_end_time', '14:00');
+
         return response()->json([
             'valid'                            => true,
             'tenant_id'                        => $tenantSetting->tenant_id,
             'inactivity_timeout_minutes'       => $inactivityTimeout,
+            'school_start_time'                => $schoolStartTime,
+            'school_end_time'                  => $schoolEndTime,
         ], 200);
     }
 
@@ -84,7 +98,8 @@ class AttendanceTokenController extends Controller
         }
 
         $students = \App\Models\Student::where('tenant_id', $tenantSetting->tenant_id)
-            ->get(['id', 'public_id', 'name', 'nisn', 'nfc_uid']);
+            ->get(['id', 'public_id', 'name', 'nisn', 'nfc_uid'])
+            ->makeVisible(['id']);
 
         return response()->json(['data' => $students]);
     }

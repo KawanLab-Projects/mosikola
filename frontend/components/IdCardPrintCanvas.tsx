@@ -11,7 +11,8 @@ export type CanvasElementProps = {
     fontWeight?: string;
     fontFamily?: string;
     text?: string;
-    shape?: 'box' | 'circle';
+    textAlign?: 'left' | 'center' | 'right';
+    shape?: 'box' | 'circle' | 'rhomb';
     borderRadius?: number;
 }
 
@@ -21,6 +22,7 @@ export type CanvasState = {
     nisn: CanvasElementProps;
     birth_info: CanvasElementProps;
     address: CanvasElementProps;
+    jurusan: CanvasElementProps;
     barcode: CanvasElementProps;
     qr_code: CanvasElementProps;
     logo: CanvasElementProps;
@@ -44,6 +46,7 @@ interface IdCardPrintCanvasProps {
         birth_place?: string;
         birth_date?: string;
         address?: string;
+        jurusan?: string;
         photo_url?: string;
     };
     schoolData: {
@@ -230,19 +233,54 @@ export default function IdCardPrintCanvas({
                                     // Apply border radius from canvasState
                                     borderRadius: canvasState.photo.shape === 'circle'
                                         ? '50%'
-                                        : `${canvasState.photo.borderRadius || 0}px`,
+                                        : canvasState.photo.shape === 'box'
+                                            ? `${canvasState.photo.borderRadius || 0}px`
+                                            : '0',
                                     overflow: 'hidden',
                                     border: 'none',
                                     outline: 'none',
                                 }}
                             >
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                    src={getFullUrl(studentData.photo_url)}
-                                    alt="Student Photo"
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover', border: 'none', outline: 'none' }}
-                                    crossOrigin="anonymous"
-                                />
+                                {canvasState.photo.shape === 'rhomb' ? (
+                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                                        <div
+                                            style={{
+                                                width: '70.71%',
+                                                height: '70.71%',
+                                                transform: 'rotate(45deg)',
+                                                borderRadius: `${canvasState.photo.borderRadius || 0}px`,
+                                                overflow: 'hidden',
+                                                border: 'none',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                            }}
+                                        >
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={getFullUrl(studentData.photo_url)}
+                                                alt="Student Photo"
+                                                style={{
+                                                    width: '141.42%',
+                                                    height: '141.42%',
+                                                    objectFit: 'cover',
+                                                    transform: 'rotate(-45deg)',
+                                                    border: 'none',
+                                                    outline: 'none'
+                                                }}
+                                                crossOrigin="anonymous"
+                                            />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                    <img
+                                        src={getFullUrl(studentData.photo_url)}
+                                        alt="Student Photo"
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover', border: 'none', outline: 'none' }}
+                                        crossOrigin="anonymous"
+                                    />
+                                )}
                             </div>
                         )}
 
@@ -346,7 +384,9 @@ export default function IdCardPrintCanvas({
                                         backgroundColor: 'transparent',
                                         padding: '2px 6px',
                                         whiteSpace: 'nowrap',
-                                        transformOrigin: 'left center',
+                                        textAlign: canvasState.school_name.textAlign || 'left',
+                                        justifyContent: canvasState.school_name.textAlign === 'center' ? 'center' : canvasState.school_name.textAlign === 'right' ? 'flex-end' : 'flex-start',
+                                        transformOrigin: canvasState.school_name.textAlign === 'center' ? 'center center' : canvasState.school_name.textAlign === 'right' ? 'right center' : 'left center',
                                         transform: transform,
                                     }}
                                 >
@@ -359,6 +399,7 @@ export default function IdCardPrintCanvas({
                         {[
                             { key: 'name', value: studentData.name },
                             { key: 'nisn', value: studentData.nisn },
+                            { key: 'jurusan', value: studentData.jurusan || '-' },
                             { key: 'birth_info', value: formatBirthInfo() },
                             { key: 'address', value: studentData.address || '-' }
                         ].map(({ key, value }) => {
@@ -387,7 +428,9 @@ export default function IdCardPrintCanvas({
                                         border: 'none',
                                         outline: 'none',
                                         padding: '2px 6px',
-                                        transformOrigin: 'left center',
+                                        textAlign: el.textAlign || 'left',
+                                        justifyContent: el.textAlign === 'center' ? 'center' : el.textAlign === 'right' ? 'flex-end' : 'flex-start',
+                                        transformOrigin: el.textAlign === 'center' ? 'center center' : el.textAlign === 'right' ? 'right center' : 'left center',
                                         transform: transform,
                                     }}
                                 >
@@ -465,7 +508,11 @@ export default function IdCardPrintCanvas({
                                         border: 'none',
                                         outline: 'none',
                                         padding: '2px 6px',
-                                        transformOrigin: 'center center',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: el.textAlign === 'center' ? 'center' : el.textAlign === 'right' ? 'flex-end' : 'flex-start',
+                                        textAlign: el.textAlign || 'left',
+                                        transformOrigin: (key === 'back_text' || !el.textAlign) ? 'center center' : (el.textAlign === 'center' ? 'center center' : el.textAlign === 'right' ? 'right center' : 'left center'),
                                         transform: transform,
                                     }}
                                 >

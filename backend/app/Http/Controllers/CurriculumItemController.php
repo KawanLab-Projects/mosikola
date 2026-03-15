@@ -8,7 +8,10 @@ use Illuminate\Http\Request;
 
 class CurriculumItemController extends Controller
 {
-    public function __construct(private CurriculumItemService $service) {}
+    public function __construct(
+        private CurriculumItemService $service,
+        private \App\Repositories\TeacherAssignmentRepository $assignmentRepo
+    ) {}
 
     private function resolveTenantId(Request $request): int
     {
@@ -37,6 +40,86 @@ class CurriculumItemController extends Controller
             : $this->service->getByYear($tenantId, $academicYearId);
 
         return response()->json(['data' => $items]);
+    }
+
+    /** GET /curriculum-items/suggestions?academic_year_id=X&classroom_public_id=Y */
+    public function suggestions(Request $request): JsonResponse
+    {
+        $request->validate([
+            'academic_year_id'    => 'required|integer',
+            'classroom_public_id' => 'required|string|exists:classrooms,public_id',
+        ]);
+
+        $academicYearId = (int) $request->query('academic_year_id');
+        $classroom      = \App\Models\Classroom::where('public_id', $request->query('classroom_public_id'))->firstOrFail();
+
+        $assignments = $this->assignmentRepo->getByClassroom($classroom->id, $academicYearId);
+        
+        // Map assignments to suggested subjects by name matching
+        $suggestions = $assignments->filter(fn($a) => $a->assignment_type === 'guru_mapel')
+            ->map(function ($a) {
+                $subject = \App\Models\Subject::where('name', 'ilike', trim($a->subject))
+                    ->orWhere('name', 'like', '%' . trim($a->subject) . '%')
+                    ->first();
+
+                return [
+                    'teacher_id'      => $a->teacher_id,
+                    'teacher_name'    => $a->teacher->name,
+                    'teacher_public_id'=> $a->teacher->public_id,
+                    'assignment_subject_name' => $a->subject,
+                    'suggested_subject_id'    => $subject?->id,
+                    'suggested_subject_name'  => $subject?->name,
+                    'suggested_subject_public_id' => $subject?->public_id,
+                    'hours_per_week'  => 2, // Default
+                ];
+            });
+
+        return response()->json(['data' => $suggestions]);
+    }
+
+    /** POST /curriculum-items/bulk */
+    public function bulkStore(Request $request): JsonResponse
+    {
+        $request->validate([
+            'academic_year_id'    => 'required|integer|exists:academic_years,id',
+            'classroom_public_id' => 'required|string|exists:classrooms,public_id',
+            'items'               => 'required|array',
+            'items.*.subject_public_id' => 'required|string|exists:subjects,public_id',
+            'items.*.teacher_public_id' => 'required|string|exists:teachers,public_id',
+            'items.*.hours_per_week'    => 'required|integer|min:1|max:40',
+        ]);
+
+        $tenantId    = $this->resolveTenantId($request);
+        $classroomId = \App\Models\Classroom::where('public_id', $request->classroom_public_id)->value('id');
+
+        $createdCount = 0;
+        foreach ($request->items as $itemData) {
+            $subjectId   = \App\Models\Subject::where('public_id', $itemData['subject_public_id'])->value('id');
+            $teacherId   = \App\Models\Teacher::where('public_id', $itemData['teacher_public_id'])->value('id');
+
+            // Check if exists to avoid duplication
+            $exists = \App\Models\CurriculumItem::where([
+                'tenant_id'        => $tenantId,
+                'academic_year_id' => $request->academic_year_id,
+                'classroom_id'     => $classroomId,
+                'subject_id'       => $subjectId,
+            ])->exists();
+
+            if (!$exists) {
+                $this->service->create($tenantId, $request->academic_year_id, [
+                    'classroom_id'   => $classroomId,
+                    'subject_id'     => $subjectId,
+                    'teacher_id'     => $teacherId,
+                    'hours_per_week' => $itemData['hours_per_week'],
+                ]);
+                $createdCount++;
+            }
+        }
+
+        return response()->json([
+            'message' => "Berhasil menambahkan {$createdCount} entri kurikulum.",
+            'created_count' => $createdCount
+        ], 201);
     }
 
     /** POST /curriculum-items */

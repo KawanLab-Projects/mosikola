@@ -189,6 +189,8 @@ Route::middleware("auth:sanctum")->group(function () {
     Route::post('school-periods', [SchoolPeriodController::class, 'bulkReplace']);
 
     Route::get('curriculum-items', [CurriculumItemController::class, 'index']);
+    Route::get('curriculum-items/suggestions', [CurriculumItemController::class, 'suggestions']);
+    Route::post('curriculum-items/bulk', [CurriculumItemController::class, 'bulkStore']);
     Route::post('curriculum-items/copy', [CurriculumItemController::class, 'copy']);
     Route::post('curriculum-items', [CurriculumItemController::class, 'store']);
     Route::put('curriculum-items/{id}', [CurriculumItemController::class, 'update']);

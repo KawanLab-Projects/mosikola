@@ -6,9 +6,11 @@ import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode"
 export default function QrScanner({
     onScan,
     facingMode,
+    id = "qr-reader",
 }: {
     onScan: (text: string) => void
     facingMode: "environment" | "user"
+    id?: string
 }) {
     useEffect(() => {
         let html5QrCode: Html5Qrcode | null = null;
@@ -19,7 +21,7 @@ export default function QrScanner({
             if (!isComponentMounted) return;
 
             try {
-                html5QrCode = new Html5Qrcode("qr-reader", {
+                html5QrCode = new Html5Qrcode(id, {
                     verbose: false,
                     formatsToSupport: [
                         Html5QrcodeSupportedFormats.QR_CODE,
@@ -72,5 +74,5 @@ export default function QrScanner({
         };
     }, [facingMode, onScan]);
 
-    return <div id="qr-reader" className="w-full h-full" />
+    return <div id={id} className="w-full h-full" />
 }

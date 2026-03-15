@@ -41,6 +41,7 @@ export default function StudentDashboard() {
 
                     <div className="relative aspect-square rounded-xl overflow-hidden bg-black">
                         <QrScanner
+                            id="student-dashboard-scanner"
                             onScan={handleScan}
                             facingMode={facingMode}
                         />

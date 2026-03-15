@@ -101,7 +101,7 @@ export default function JournalAttendanceTab() {
                     </TableHeader>
                     <TableBody>
                         {isLoading ? (
-                            <TableRow>
+                            <TableRow key="loading">
                                 <TableCell colSpan={7} className="h-48 text-center">
                                     <div className="flex flex-col items-center justify-center text-muted-foreground">
                                         <Loader2 className="h-8 w-8 animate-spin mb-4" />
@@ -110,7 +110,7 @@ export default function JournalAttendanceTab() {
                                 </TableCell>
                             </TableRow>
                         ) : data?.length === 0 ? (
-                            <TableRow>
+                            <TableRow key="empty">
                                 <TableCell colSpan={7} className="h-48 text-center text-muted-foreground">
                                     Tidak ada data jurnal masuk pada tanggal ini.
                                 </TableCell>

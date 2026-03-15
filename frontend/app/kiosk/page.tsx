@@ -49,6 +49,8 @@ export default function KioskPage() {
     const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
     const outboxRef = useRef(outbox);
     const [inactivityTimeoutMinutes, setInactivityTimeoutMinutes] = useState(20);
+    const [schoolStartTime, setSchoolStartTime] = useState("07:00");
+    const [schoolEndTime, setSchoolEndTime] = useState("14:00");
 
     // Setup mode states
     const [isSetupMode, setIsSetupMode] = useState(true);
@@ -88,6 +90,20 @@ export default function KioskPage() {
             const expiresDate = new Date(response.data.expires_at);
             const timeDiff = Math.max(0, Math.round((expiresDate.getTime() - Date.now()) / 1000));
             setTimeLeft(timeDiff);
+
+            // Auto-update settings if provided
+            if (response.data.settings) {
+                const { inactivity_timeout_minutes, school_start_time, school_end_time } = response.data.settings;
+                if (inactivity_timeout_minutes) setInactivityTimeoutMinutes(Number(inactivity_timeout_minutes));
+                if (school_start_time) setSchoolStartTime(school_start_time);
+                if (school_end_time) setSchoolEndTime(school_end_time);
+                
+                localStorage.setItem("mosikola_kiosk_settings", JSON.stringify({ 
+                    timeout: inactivity_timeout_minutes, 
+                    start: school_start_time, 
+                    end: school_end_time 
+                }));
+            }
         } catch {
             showNotification("error", "Gagal memuat token Kiosk. Periksa koneksi.");
         } finally {
@@ -135,29 +151,44 @@ export default function KioskPage() {
         setIsIdleMode(false);
         idleTimerRef.current = setTimeout(() => {
             setIsIdleMode(true);
-            // Sync outbox on idle
-            const token = kioskTokenRef.current;
-            if (token && outboxRef.current.length > 0) {
-                syncOutbox(token, outboxRef.current);
-            }
         }, timeoutMinutes * 60 * 1000);
-    }, [syncOutbox]);
+    }, []);
+
+    // Force sync on inactivity if idle mode is already active but outbox is not empty
+    useEffect(() => {
+        if (isIdleMode && outbox.length > 0 && kioskToken) {
+            syncOutbox(kioskToken, outbox);
+        }
+    }, [isIdleMode, outbox.length, kioskToken, syncOutbox]);
 
     const recordOfflineAttendance = useCallback((student: Student, method: "nfc" | "barcode" | "offline") => {
-        // Wake immediately from idle mode
+        // Wake from idle immediately
         setIsIdleMode(false);
         resetIdleTimer(inactivityTimeoutMinutes);
 
-        const today = new Date().toISOString().split("T")[0];
-        const alreadyScanned = outboxRef.current.find(r => r.student_id === student.id && r.timestamp.startsWith(today));
-        const type = alreadyScanned ? "check_out" : "check_in";
+        const now = new Date();
+        const currentTime = format(now, "HH:mm");
+        const isAfterSchool = currentTime >= schoolEndTime;
+        const type = isAfterSchool ? "check_out" : "check_in";
+
+        const today = now.toISOString().split("T")[0];
+        const alreadyScanned = outboxRef.current.find(r => 
+            r.student_id === student.id && 
+            r.timestamp.startsWith(today) && 
+            r.type === type
+        );
+
+        if (alreadyScanned) {
+            showNotification("warning", `Sudah melakukan absensi ${type === "check_in" ? "masuk" : "pulang"} hari ini.`, student.name);
+            return;
+        }
 
         const newRecord: OutboxRecord = {
             student_id: student.id,
             student_name: student.name,
             type,
             method,
-            timestamp: new Date().toISOString(),
+            timestamp: now.toISOString(),
         };
 
         const updatedOutbox = [...outboxRef.current, newRecord];
@@ -174,7 +205,7 @@ export default function KioskPage() {
         setRecentScans(prev => [scan, ...prev].slice(0, 10));
 
         showNotification("success", `Berhasil Check-${type === "check_in" ? "In" : "Out"} (Offline)`, student.name);
-    }, [inactivityTimeoutMinutes, resetIdleTimer, showNotification]);
+    }, [inactivityTimeoutMinutes, resetIdleTimer, showNotification, schoolEndTime]);
 
     const validateToken = useCallback(async (token: string) => {
         try {
@@ -186,10 +217,17 @@ export default function KioskPage() {
                 localStorage.setItem("mosikola_kiosk_token", token);
                 setKioskToken(token);
                 setIsSetupMode(false);
-                const timeout = response.data.inactivity_timeout_minutes
-                    ? Number(response.data.inactivity_timeout_minutes)
-                    : 20;
+                
+                const timeout = response.data.inactivity_timeout_minutes ? Number(response.data.inactivity_timeout_minutes) : 20;
+                const start = response.data.school_start_time || "07:00";
+                const end = response.data.school_end_time || "14:00";
+
                 setInactivityTimeoutMinutes(timeout);
+                setSchoolStartTime(start);
+                setSchoolEndTime(end);
+
+                localStorage.setItem("mosikola_kiosk_settings", JSON.stringify({ timeout, start, end }));
+
                 resetIdleTimer(timeout);
                 fetchToken(token);
                 fetchStudents(token);
@@ -258,12 +296,25 @@ export default function KioskPage() {
         if (storedStudents) setStudents(JSON.parse(storedStudents));
         if (storedOutbox) setOutbox(JSON.parse(storedOutbox));
         if (storedToken) {
-            validateToken(storedToken);
+            setKioskToken(storedToken);
+            setIsSetupMode(false);
+
+            const savedSettings = localStorage.getItem("mosikola_kiosk_settings");
+            if (savedSettings) {
+                const { timeout, start, end } = JSON.parse(savedSettings);
+                setInactivityTimeoutMinutes(timeout || 20);
+                setSchoolStartTime(start || "07:00");
+                setSchoolEndTime(end || "14:00");
+                resetIdleTimer(timeout || 20);
+            }
+
+            fetchToken(storedToken);
+            fetchStudents(storedToken);
         } else {
             setIsSetupMode(true);
             setLoading(false);
         }
-    }, [validateToken]);
+    }, [validateToken, fetchToken, fetchStudents, resetIdleTimer]);
 
     // QR timer countdown
     useEffect(() => {
@@ -318,7 +369,7 @@ export default function KioskPage() {
                 </div>
                 {/* Mini camera */}
                 <div className="flex-1 rounded-lg overflow-hidden bg-black border border-slate-700 relative" style={{ height: 97 }}>
-                    <QrScanner onScan={processBarcodeScan} facingMode="environment" />
+                    <QrScanner id="mini-scanner" onScan={processBarcodeScan} facingMode="environment" />
                     <motion.div
                         className="absolute inset-x-0 h-0.5 bg-green-500/60 pointer-events-none"
                         animate={{ top: ["10%", "90%", "10%"] }}
@@ -360,7 +411,8 @@ export default function KioskPage() {
             </AnimatePresence>
 
             {/* ── FULL ATTENDANCE MODE ── */}
-            <div className={`min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 relative overflow-hidden selection:bg-blue-500/30 ${isIdleMode && !isSetupMode ? "invisible" : "visible"}`}>
+            {(!isIdleMode || isSetupMode) && (
+                <div className={`min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 relative overflow-hidden selection:bg-blue-500/30`}>
                 <ThreeBackground />
 
                 {/* Notification overlay */}
@@ -517,7 +569,7 @@ export default function KioskPage() {
                                     </CardHeader>
                                     <CardContent className="flex flex-col items-center justify-center pt-6 pb-8">
                                         <div className="w-56 h-56 md:w-60 md:h-60 overflow-hidden rounded-2xl border-4 border-slate-800 relative bg-black shadow-inner">
-                                            <QrScanner onScan={processBarcodeScan} facingMode="environment" />
+                                            <QrScanner id="full-scanner" onScan={processBarcodeScan} facingMode="environment" />
                                             <motion.div
                                                 className="absolute inset-x-0 h-1 bg-green-500/50 shadow-[0_0_20px_bg-green-500] pointer-events-none rounded-full mx-4 z-10"
                                                 animate={{ top: ["10%", "90%", "10%"] }}
@@ -530,7 +582,8 @@ export default function KioskPage() {
                         </div>
                     </div>
                 )}
-            </div>
+                </div>
+            )}
         </>
     );
 }

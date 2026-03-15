@@ -292,7 +292,7 @@ export default function KioskPage() {
                             </CardHeader>
                             <CardContent className="flex flex-col items-center justify-center pt-6 pb-8">
                                 <div className="w-56 h-56 md:w-60 md:h-60 overflow-hidden rounded-2xl border-4 border-slate-800 relative bg-black shadow-inner">
-                                    <QrScanner onScan={processBarcodeScan} facingMode="environment" />
+                                    <QrScanner id="kiosk-token-scanner" onScan={processBarcodeScan} facingMode="environment" />
                                     {/* Scanning Animation line */}
                                     <motion.div
                                         className="absolute inset-x-0 h-1 bg-green-500/50 shadow-[0_0_20px_bg-green-500] pointer-events-none rounded-full mx-4 z-10"

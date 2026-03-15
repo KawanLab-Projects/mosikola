@@ -84,7 +84,7 @@ class AttendanceService
                 continue;
             }
 
-            $timestamp = isset($record['timestamp']) ? Carbon::parse($record['timestamp']) : now();
+            $timestamp = isset($record['timestamp']) ? Carbon::parse($record['timestamp'])->setTimezone(config('app.timezone')) : now();
             $results[] = $this->recordCheckInOut($student, $tenantId, $record['method'] ?? 'offline', $timestamp);
         }
 
@@ -97,11 +97,25 @@ class AttendanceService
         $today = $at->toDateString();
         $attendance = $this->attendanceRepo->getStudentAttendanceOnDate($student->id, $today);
 
-        $limitTime = \App\Models\TenantSetting::getValue($tenantId, 'attendance', 'check_in_limit', '07:30');
-        $isLate = $at->format('H:i') > $limitTime ? 'terlambat' : 'hadir';
+        $schoolStartTime = \App\Models\TenantSetting::getValue($tenantId, 'attendance', 'school_start_time', '07:00');
+        $schoolEndTime = \App\Models\TenantSetting::getValue($tenantId, 'attendance', 'school_end_time', '14:00');
+        
+        $currentTime = $at->format('H:i');
+        $isAfterSchool = $currentTime >= $schoolEndTime;
 
-        if (!$attendance) {
-            // Check-in
+        if (!$isAfterSchool) {
+            // Check-in Phase
+            $hasCheckedIn = \App\Models\Attendance::where('student_id', $student->id)
+                ->whereDate('attendance_date', $today)
+                ->where('type', 'check_in')
+                ->exists();
+
+            if ($hasCheckedIn) {
+                return ['status' => 'warning', 'message' => 'Sudah melakukan absensi masuk hari ini.'];
+            }
+
+            $isLate = $currentTime > $schoolStartTime ? 'terlambat' : 'hadir';
+
             $this->attendanceRepo->create([
                 'student_id' => $student->id,
                 'tenant_id' => $tenantId,
@@ -112,47 +126,42 @@ class AttendanceService
                 'method' => $method,
                 'academic_year_id' => $student->classroom->academic_year_id ?? null,
             ]);
+
             return [
                 'status' => 'success',
                 'type' => 'check_in',
                 'student' => $student->name,
                 'attendance_status' => $isLate
             ];
+        } else {
+            // Check-out Phase
+            $hasCheckedOut = \App\Models\Attendance::where('student_id', $student->id)
+                ->whereDate('attendance_date', $today)
+                ->where('type', 'check_out')
+                ->exists();
+
+            if ($hasCheckedOut) {
+                return ['status' => 'warning', 'message' => 'Sudah melakukan absensi pulang hari ini.'];
+            }
+
+            $this->attendanceRepo->create([
+                'student_id' => $student->id,
+                'tenant_id' => $tenantId,
+                'attendance_date' => $today,
+                'attended_at' => $at,
+                'type' => 'check_out',
+                'status' => 'hadir',
+                'method' => $method,
+                'academic_year_id' => $student->classroom->academic_year_id ?? null,
+            ]);
+
+            return [
+                'status' => 'success',
+                'type' => 'check_out',
+                'student' => $student->name,
+                'attendance_status' => 'hadir'
+            ];
         }
-
-        // If already checked in, and scanning again -> check out
-        // Wait, does the proposal want us to just mark type='check_out'?
-        // The DB has one row per attendance per day or multiple?
-        // Since `attended_at` is a single column, we might need multiple rows or a `checked_out_at` column.
-        // The migration added `type` ENUM('check_in', 'check_out'). That implies multiple rows per day.
-
-        $hasCheckedOut = \App\Models\Attendance::where('student_id', $student->id)
-            ->whereDate('attendance_date', $today)
-            ->where('type', 'check_out')
-            ->exists();
-
-        if ($hasCheckedOut) {
-            return ['status' => 'warning', 'message' => 'Already checked out today'];
-        }
-
-        // Create checkout row
-        $this->attendanceRepo->create([
-            'student_id' => $student->id,
-            'tenant_id' => $tenantId,
-            'attendance_date' => $today,
-            'attended_at' => now(),
-            'type' => 'check_out',
-            'status' => 'hadir', // not late for checkout
-            'method' => $method,
-            'academic_year_id' => $student->classroom->academic_year_id ?? null,
-        ]);
-
-        return [
-            'status' => 'success',
-            'type' => 'check_out',
-            'student' => $student->name,
-            'attendance_status' => 'hadir'
-        ];
     }
 
     public function getLateArrival(

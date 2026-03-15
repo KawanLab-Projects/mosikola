@@ -16,7 +16,10 @@ import {
     QrCode,
     Barcode,
     Settings,
-    Shield
+    Shield,
+    AlignLeft,
+    AlignCenter,
+    AlignRight
 } from "lucide-react"
 import {
     Select,
@@ -40,6 +43,7 @@ interface CanvasElementProps {
     fontWeight?: 'normal' | 'bold'; // Text only
     fontStyle?: 'normal' | 'italic'; // Text only
     color?: string; // Text only
+    textAlign?: 'left' | 'center' | 'right'; // Text only
     shape?: 'box' | 'circle' | 'rhomb'; // Only used by photo
     borderRadius?: number; // Only used by photo box
     strokeWidth?: number; // Only used by photo
@@ -542,6 +546,35 @@ export default function TemplateEditorPage() {
                                                 </div>
                                             </div>
                                         </div>
+                                        <div>
+                                            <Label>Perataan Teks</Label>
+                                            <div className="flex mt-1 p-1 bg-muted rounded-md w-fit">
+                                                <Button
+                                                    variant={el.textAlign === 'left' || !el.textAlign ? 'secondary' : 'ghost'}
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0"
+                                                    onClick={() => updateElement(selectedElement, { textAlign: 'left' })}
+                                                >
+                                                    <AlignLeft className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant={el.textAlign === 'center' ? 'secondary' : 'ghost'}
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0"
+                                                    onClick={() => updateElement(selectedElement, { textAlign: 'center' })}
+                                                >
+                                                    <AlignCenter className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant={el.textAlign === 'right' ? 'secondary' : 'ghost'}
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0"
+                                                    onClick={() => updateElement(selectedElement, { textAlign: 'right' })}
+                                                >
+                                                    <AlignRight className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
                                     </>
                                 )}
 
@@ -575,7 +608,7 @@ export default function TemplateEditorPage() {
                                             </SelectContent>
                                         </Select>
 
-                                        {el.shape === 'box' && (
+                                        {['box', 'rhomb'].includes(el.shape || 'box') && (
                                             <div className="mt-4">
                                                 <Label>Sudut Melengkung (Border Radius) px</Label>
                                                 <Input
@@ -701,16 +734,47 @@ export default function TemplateEditorPage() {
                                     className={`border-2 ${selectedElement === 'photo' ? 'border-primary ring-2 ring-primary/30 z-50' : 'border-dashed border-transparent hover:border-gray-400'} flex items-center justify-center cursor-move transition-colors overflow-hidden`}
                                     style={{
                                         borderRadius: canvasState.photo.shape === 'circle' ? '50%' : canvasState.photo.shape === 'box' ? `${canvasState.photo.borderRadius || 0}px` : '0',
-                                        clipPath: canvasState.photo.shape === 'rhomb' ? 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' : 'none',
                                     }}
                                 >
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img
-                                        src={MOCK_STUDENT.photo}
-                                        alt="Photo Area"
-                                        className="w-full h-full object-cover pointer-events-none opacity-80"
-                                        draggable={false}
-                                    />
+                                    {canvasState.photo.shape === 'rhomb' ? (
+                                        <div className="w-full h-full flex items-center justify-center overflow-hidden">
+                                            <div
+                                                style={{
+                                                    width: '70.71%',
+                                                    height: '70.71%',
+                                                    transform: 'rotate(45deg)',
+                                                    borderRadius: `${canvasState.photo.borderRadius || 0}px`,
+                                                    overflow: 'hidden',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                }}
+                                                className="bg-slate-200 dark:bg-slate-800"
+                                            >
+                                                <img
+                                                    src={MOCK_STUDENT.photo}
+                                                    alt="Photo Area"
+                                                    style={{
+                                                        width: '141.42%',
+                                                        height: '141.42%',
+                                                        objectFit: 'cover',
+                                                        transform: 'rotate(-45deg)',
+                                                        pointerEvents: 'none',
+                                                        opacity: 0.8
+                                                    }}
+                                                    draggable={false}
+                                                />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        /* eslint-disable-next-line @next/next/no-img-element */
+                                        <img
+                                            src={MOCK_STUDENT.photo}
+                                            alt="Photo Area"
+                                            className="w-full h-full object-cover pointer-events-none opacity-80"
+                                            draggable={false}
+                                        />
+                                    )}
                                 </Rnd>
                             )}
 
@@ -815,7 +879,8 @@ export default function TemplateEditorPage() {
                                         const { text: fittedText, transform } = getAutoFitTextAndTransform(originalText, (canvasState.school_name.width || 100) - 12, canvasState.school_name.fontSize || 16, false);
                                         return (
                                             <div style={{
-                                                transformOrigin: 'left center',
+                                                textAlign: canvasState.school_name.textAlign || 'left',
+                                                transformOrigin: canvasState.school_name.textAlign === 'center' ? 'center center' : canvasState.school_name.textAlign === 'right' ? 'right center' : 'left center',
                                                 transform: transform,
                                                 width: '100%',
                                             }}>
@@ -852,7 +917,8 @@ export default function TemplateEditorPage() {
                                         const { text: fittedText, transform } = getAutoFitTextAndTransform(originalText, (canvasState.name.width || 100) - 12, canvasState.name.fontSize || 18);
                                         return (
                                             <div style={{
-                                                transformOrigin: 'left center',
+                                                textAlign: canvasState.name.textAlign || 'left',
+                                                transformOrigin: canvasState.name.textAlign === 'center' ? 'center center' : canvasState.name.textAlign === 'right' ? 'right center' : 'left center',
                                                 transform: transform,
                                                 width: '100%',
                                             }}>
@@ -889,7 +955,8 @@ export default function TemplateEditorPage() {
                                         const { text: fittedText, transform } = getAutoFitTextAndTransform(originalText, (canvasState.nisn.width || 100) - 12, canvasState.nisn.fontSize || 14);
                                         return (
                                             <div style={{
-                                                transformOrigin: 'left center',
+                                                textAlign: canvasState.nisn.textAlign || 'left',
+                                                transformOrigin: canvasState.nisn.textAlign === 'center' ? 'center center' : canvasState.nisn.textAlign === 'right' ? 'right center' : 'left center',
                                                 transform: transform,
                                                 width: '100%',
                                             }}>
@@ -926,7 +993,8 @@ export default function TemplateEditorPage() {
                                         const { text: fittedText, transform } = getAutoFitTextAndTransform(originalText, (canvasState.birth_info.width || 100) - 12, canvasState.birth_info.fontSize || 14);
                                         return (
                                             <div style={{
-                                                transformOrigin: 'left center',
+                                                textAlign: canvasState.birth_info.textAlign || 'left',
+                                                transformOrigin: canvasState.birth_info.textAlign === 'center' ? 'center center' : canvasState.birth_info.textAlign === 'right' ? 'right center' : 'left center',
                                                 transform: transform,
                                                 width: '100%',
                                             }}>
@@ -963,7 +1031,8 @@ export default function TemplateEditorPage() {
                                         const { text: fittedText, transform } = getAutoFitTextAndTransform(originalText, (canvasState.address.width || 100) - 12, canvasState.address.fontSize || 12);
                                         return (
                                             <div style={{
-                                                transformOrigin: 'left center',
+                                                textAlign: canvasState.address.textAlign || 'left',
+                                                transformOrigin: canvasState.address.textAlign === 'center' ? 'center center' : canvasState.address.textAlign === 'right' ? 'right center' : 'left center',
                                                 transform: transform,
                                                 width: '100%',
                                             }}>
@@ -1000,7 +1069,8 @@ export default function TemplateEditorPage() {
                                         const { text: fittedText, transform } = getAutoFitTextAndTransform(originalText, (canvasState.jurusan.width || 100) - 12, canvasState.jurusan.fontSize || 14);
                                         return (
                                             <div style={{
-                                                transformOrigin: 'left center',
+                                                textAlign: canvasState.jurusan.textAlign || 'left',
+                                                transformOrigin: canvasState.jurusan.textAlign === 'center' ? 'center center' : canvasState.jurusan.textAlign === 'right' ? 'right center' : 'left center',
                                                 transform: transform,
                                                 width: '100%',
                                             }}>
@@ -1069,7 +1139,8 @@ export default function TemplateEditorPage() {
                                         const { text: fittedText, transform } = getAutoFitTextAndTransform(originalText, (canvasState.back_school_name.width || 100) - 12, canvasState.back_school_name.fontSize || 14, false);
                                         return (
                                             <div style={{
-                                                transformOrigin: 'left center',
+                                                textAlign: canvasState.back_school_name.textAlign || 'left',
+                                                transformOrigin: canvasState.back_school_name.textAlign === 'center' ? 'center center' : canvasState.back_school_name.textAlign === 'right' ? 'right center' : 'left center',
                                                 transform: transform,
                                                 width: '100%',
                                             }}>
@@ -1097,7 +1168,11 @@ export default function TemplateEditorPage() {
                                         fontStyle: canvasState.back_text.fontStyle === 'italic' ? 'italic' : 'normal',
                                     }}
                                 >
-                                    <div style={{ whiteSpace: 'pre-wrap', maxWidth: `${CANVAS_WIDTH - 40}px` }}>
+                                    <div style={{ 
+                                        whiteSpace: 'pre-wrap', 
+                                        maxWidth: `${CANVAS_WIDTH - 40}px`,
+                                        textAlign: canvasState.back_text.textAlign || 'left'
+                                    }}>
                                         {canvasState.back_text.text || ''}
                                     </div>
                                 </Rnd>
@@ -1129,7 +1204,8 @@ export default function TemplateEditorPage() {
                                         const { text: fittedText, transform } = getAutoFitTextAndTransform(originalText, (canvasState.back_nama_kepala_sekolah.width || 100) - 12, canvasState.back_nama_kepala_sekolah.fontSize || 14);
                                         return (
                                             <div style={{
-                                                transformOrigin: 'center center',
+                                                textAlign: canvasState.back_nama_kepala_sekolah.textAlign || 'left',
+                                                transformOrigin: canvasState.back_nama_kepala_sekolah.textAlign === 'center' ? 'center center' : canvasState.back_nama_kepala_sekolah.textAlign === 'right' ? 'right center' : 'left center',
                                                 transform: transform,
                                                 width: '100%',
                                             }}>
@@ -1166,7 +1242,8 @@ export default function TemplateEditorPage() {
                                         const { text: fittedText, transform } = getAutoFitTextAndTransform(originalText, (canvasState.back_nip_kepala_sekolah.width || 100) - 12, canvasState.back_nip_kepala_sekolah.fontSize || 14);
                                         return (
                                             <div style={{
-                                                transformOrigin: 'center center',
+                                                textAlign: canvasState.back_nip_kepala_sekolah.textAlign || 'left',
+                                                transformOrigin: canvasState.back_nip_kepala_sekolah.textAlign === 'center' ? 'center center' : canvasState.back_nip_kepala_sekolah.textAlign === 'right' ? 'right center' : 'left center',
                                                 transform: transform,
                                                 width: '100%',
                                             }}>

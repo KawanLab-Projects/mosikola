@@ -35,11 +35,20 @@ interface Student {
     address?: string;
     birth_place?: string;
     birth_date?: string;
+    classroom?: {
+        name: string;
+        short: string;
+        study_program?: {
+            name: string;
+            short: string;
+        }
+    };
 }
 
 interface PrintSnapshot {
     name: string;
     nisn: string;
+    jurusan?: string;
     birth_place?: string;
     birth_date?: string;
 }
@@ -305,6 +314,7 @@ export default function SuperadminOrdersPage() {
             const dummyStudentData = {
                 name: firstItem.print_snapshot.name || firstItem.student?.name || '',
                 nisn: firstItem.print_snapshot.nisn || firstItem.student?.nisn || '',
+                jurusan: firstItem.print_snapshot.jurusan || firstItem.student?.classroom?.study_program?.name || '',
                 birth_place: firstItem.print_snapshot.birth_place || firstItem.student?.birth_place,
                 birth_date: firstItem.print_snapshot.birth_date || firstItem.student?.birth_date,
                 address: firstItem.student?.address || '',
@@ -348,6 +358,7 @@ export default function SuperadminOrdersPage() {
                 const studentData = {
                     name: item.print_snapshot.name || student?.name || '',
                     nisn: item.print_snapshot.nisn || student?.nisn || '',
+                    jurusan: item.print_snapshot.jurusan || student?.classroom?.study_program?.name || '',
                     birth_place: item.print_snapshot.birth_place || student?.birth_place,
                     birth_date: item.print_snapshot.birth_date || student?.birth_date,
                     address: student?.address || '',

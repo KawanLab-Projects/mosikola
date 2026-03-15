@@ -180,6 +180,7 @@ class IdCardOrderController extends Controller
                     'print_snapshot' => [
                         'name' => $student->name,
                         'nisn' => $student->nisn,
+                        'jurusan' => $student->classroom?->studyProgram?->name ?? '',
                         'birth_place' => $student->birth_place ?? '',
                         'birth_date' => $student->birth_date ?? ''
                     ]
@@ -321,8 +322,8 @@ class IdCardOrderController extends Controller
         // This endpoint will be called by Superadmin to get full payload for client-side rendering
         $order = IdCardOrder::with(['template', 'tenant'])->where('id', $id)->firstOrFail();
 
-        // Load items with the student relations
-        $order->load(['items.student']);
+        // Load items with the student relations and nested classroom/studyProgram
+        $order->load(['items.student.classroom.studyProgram']);
 
         // Load the school tenant settings (name, address, headmaster details, logo)
         $tenantSettings = \App\Models\TenantSetting::where('tenant_id', $order->tenant_id)

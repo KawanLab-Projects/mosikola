@@ -324,7 +324,7 @@ export default function LiteKioskTokenPage() {
                         </CardHeader>
                         <CardContent className="flex justify-center p-12">
                             <div className="w-64 h-64 rounded-3xl overflow-hidden bg-black border-4 border-slate-700 shadow-inner">
-                                <QrScanner onScan={processBarcodeScan} facingMode="environment" />
+                                <QrScanner id="lite-kiosk-token-scanner" onScan={processBarcodeScan} facingMode="environment" />
                             </div>
                         </CardContent>
                     </Card>

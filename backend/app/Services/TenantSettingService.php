@@ -16,8 +16,6 @@ class TenantSettingService
             'school_address'  => '',
         ],
         'schedule' => [
-            'school_start_time' => '07:00',
-            'school_end_time'   => '14:00',
             'active_days'       => '1,2,3,4,5',
             'active_semester'   => 'ganjil',
             'holidays'                       => '',
@@ -25,6 +23,8 @@ class TenantSettingService
             'shortened_period_days'           => '',
         ],
         'attendance' => [
+            'school_start_time'                 => '07:00',
+            'school_end_time'                   => '14:00',
             'tolerance_late_minutes'            => '15',
             'token_ttl_minutes'                 => '30',
             'absent_mode'                       => 'token',

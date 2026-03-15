@@ -19,7 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import {
-    Plus, Trash2, Save, BookOpen, Loader2, Clock, Users, Pencil, Copy
+    Plus, Trash2, Save, BookOpen, Loader2, Clock, Users, Pencil, Copy, Sparkles
 } from "lucide-react"
 import { AcademicYear } from "@/types"
 
@@ -63,6 +63,19 @@ type CurriculumItem = {
     subject?: Subject
     teacher?: Teacher
     classroom?: Classroom
+}
+
+type CurriculumSuggestion = {
+    teacher_id: number
+    teacher_name: string
+    teacher_public_id: string
+    assignment_subject_name: string
+    suggested_subject_id: number | null
+    suggested_subject_name: string | null
+    suggested_subject_public_id: string | null
+    hours_per_week: number
+    // Form handling
+    selected_subject_public_id?: string
 }
 
 type ApiError = {
@@ -281,6 +294,12 @@ function CurriculumItemsCard({ academicYears }: { academicYears: AcademicYear[] 
     const [sourceClassroomId, setSourceClassroomId] = useState("")
     const [isCopying, setIsCopying] = useState(false)
 
+    // Suggestion Feature
+    const [suggestionOpen, setSuggestionOpen] = useState(false)
+    const [suggestions, setSuggestions] = useState<CurriculumSuggestion[]>([])
+    const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
+    const [isSavingBulk, setIsSavingBulk] = useState(false)
+
     // Init selected year to active
     useEffect(() => {
         const active = academicYears.find(y => y.is_active)
@@ -401,6 +420,58 @@ function CurriculumItemsCard({ academicYears }: { academicYears: AcademicYear[] 
         }
     }
 
+    const fetchSuggestions = async () => {
+        if (!selectedYearId || !selectedClassroomId) return
+        setIsLoadingSuggestions(true)
+        setSuggestionOpen(true)
+        try {
+            const res = await api.get("/curriculum-items/suggestions", {
+                params: { academic_year_id: selectedYearId, classroom_public_id: selectedClassroomId }
+            })
+            const data: CurriculumSuggestion[] = res.data.data || []
+            // Prep the selected_subject_public_id if suggestion found
+            setSuggestions(data.map(s => ({
+                ...s,
+                selected_subject_public_id: s.suggested_subject_public_id || ""
+            })))
+        } catch {
+            toast.error("Gagal memuat saran penugasan")
+        } finally {
+            setIsLoadingSuggestions(false)
+        }
+    }
+
+    const handleBulkSave = async () => {
+        const payload = suggestions
+            .filter(s => s.selected_subject_public_id && s.hours_per_week > 0)
+            .map(s => ({
+                subject_public_id: s.selected_subject_public_id,
+                teacher_public_id: s.teacher_public_id,
+                hours_per_week: Number(s.hours_per_week)
+            }))
+
+        if (payload.length === 0) {
+            toast.error("Tidak ada data valid untuk disimpan")
+            return
+        }
+
+        setIsSavingBulk(true)
+        try {
+            const res = await api.post("/curriculum-items/bulk", {
+                academic_year_id: Number(selectedYearId),
+                classroom_public_id: selectedClassroomId,
+                items: payload
+            })
+            toast.success(res.data.message || "Kurikulum berhasil disimpan")
+            setSuggestionOpen(false)
+            fetchItems()
+        } catch (err) {
+            toast.error(apiErrMsg(err, "Gagal menyimpan kurikulum massal"))
+        } finally {
+            setIsSavingBulk(false)
+        }
+    }
+
     const canAdd = !!selectedYearId && !!selectedClassroomId
 
     return (
@@ -424,6 +495,15 @@ function CurriculumItemsCard({ academicYears }: { academicYears: AcademicYear[] 
                             onClick={() => { setSourceClassroomId(""); setCopyOpen(true) }}
                         >
                             <Copy className="h-4 w-4" /> Salin Kurikulum
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            className="gap-1.5"
+                            disabled={!canAdd}
+                            onClick={fetchSuggestions}
+                        >
+                            <Sparkles className="h-4 w-4" /> Ambil dari Penugasan
                         </Button>
                         <Button
                             size="sm"
@@ -670,6 +750,101 @@ function CurriculumItemsCard({ academicYears }: { academicYears: AcademicYear[] 
                         <Button variant="outline" onClick={() => setCopyOpen(false)}>Batal</Button>
                         <Button onClick={handleCopy} disabled={isCopying || !sourceClassroomId}>
                             {isCopying ? "Menyalin..." : "Salin Sekarang"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Suggestions Dialog */}
+            <Dialog open={suggestionOpen} onOpenChange={setSuggestionOpen}>
+                <DialogContent className="md:max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden text-token">
+                    <DialogHeader className="p-6 pb-2">
+                        <DialogTitle className="flex items-center gap-2">
+                            <Sparkles className="h-5 w-5 text-amber-500" />
+                            Ambil dari Penugasan Guru
+                        </DialogTitle>
+                        <DialogDescription>
+                            Daftar di bawah ini adalah guru yang telah ditugaskan ke kelas ini. 
+                            Silakan pilih mata pelajaran yang sesuai jika tidak otomatis terdeteksi.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-y-auto px-6 py-2">
+                        {isLoadingSuggestions ? (
+                            <div className="flex flex-col items-center justify-center py-12 gap-3">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                <p className="text-sm text-muted-foreground">Menganalisis penugasan guru...</p>
+                            </div>
+                        ) : suggestions.length === 0 ? (
+                            <div className="text-center py-12 border rounded-lg bg-muted/30">
+                                <BookOpen className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
+                                <p className="text-sm font-medium">Tidak ada penugasan guru ditemukan</p>
+                                <p className="text-xs text-muted-foreground mt-1 px-8">
+                                    Pastikan Anda sudah mengatur penugasan guru mapel untuk kelas ini di menu Manajemen Guru.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="rounded-md border overflow-hidden">
+                                <Table>
+                                    <TableHeader className="sticky top-0 bg-background z-10">
+                                        <TableRow>
+                                            <TableHead>Guru</TableHead>
+                                            <TableHead>Teks Penugasan</TableHead>
+                                            <TableHead>Mata Pelajaran (Database)</TableHead>
+                                            <TableHead className="w-24 text-center">Jam/Mgg</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {suggestions.map((s, idx) => (
+                                            <TableRow key={idx}>
+                                                <TableCell className="font-medium">{s.teacher_name}</TableCell>
+                                                <TableCell className="text-xs text-muted-foreground italic">
+                                                    &quot;{s.assignment_subject_name}&quot;
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Select 
+                                                        value={s.selected_subject_public_id} 
+                                                        onValueChange={v => setSuggestions(prev => prev.map((p, i) => i === idx ? { ...p, selected_subject_public_id: v } : p))}
+                                                    >
+                                                        <SelectTrigger className={`h-8 ${!s.selected_subject_public_id ? 'border-amber-500 bg-amber-50/50' : ''}`}>
+                                                            <SelectValue placeholder="Pilih mapel..." />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {subjects.map(subj => (
+                                                                <SelectItem key={subj.public_id} value={subj.public_id}>
+                                                                    {subj.name}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Input 
+                                                        type="number" min="1" max="10"
+                                                        value={s.hours_per_week}
+                                                        onChange={e => setSuggestions(prev => prev.map((p, i) => i === idx ? { ...p, hours_per_week: Number(e.target.value) } : p))}
+                                                        className="h-8 py-0"
+                                                    />
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
+                    </div>
+
+                    <DialogFooter className="p-6 pt-2 bg-muted/30 border-t">
+                        <Button variant="outline" onClick={() => setSuggestionOpen(false)} disabled={isSavingBulk}>
+                            Batal
+                        </Button>
+                        <Button 
+                            onClick={handleBulkSave} 
+                            disabled={isSavingBulk || suggestions.length === 0}
+                            className="gap-1.5"
+                        >
+                            {isSavingBulk ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                            Simpan Semua
                         </Button>
                     </DialogFooter>
                 </DialogContent>

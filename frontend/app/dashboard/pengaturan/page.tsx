@@ -38,11 +38,11 @@ const DEFAULTS: AllSettings = {
         principal_name: "", principal_nip: "", school_logo_url: "", school_address: "",
     },
     schedule: {
-        school_start_time: "07:00", school_end_time: "14:00",
         active_days: "1,2,3,4,5", active_semester: "ganjil", holidays: "",
         default_period_duration_minutes: "45", shortened_period_days: "",
     },
     attendance: {
+        school_start_time: "07:00", school_end_time: "14:00",
         tolerance_late_minutes: "15", token_ttl_minutes: "30", absent_mode: "token", kiosk_token: "",
         kiosk_inactivity_timeout_minutes: "20",
     },
@@ -421,24 +421,6 @@ export default function PengaturanPage() {
                             <CardDescription>Atur jam operasional, hari aktif, dan semester yang berlaku.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="grid gap-2">
-                                    <Label>Jam Masuk</Label>
-                                    <Input
-                                        type="time"
-                                        value={settings.schedule.school_start_time}
-                                        onChange={e => set("schedule", "school_start_time", e.target.value)}
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Jam Pulang</Label>
-                                    <Input
-                                        type="time"
-                                        value={settings.schedule.school_end_time}
-                                        onChange={e => set("schedule", "school_end_time", e.target.value)}
-                                    />
-                                </div>
-                            </div>
                             <div className="grid gap-2">
                                 <Label>Semester Aktif</Label>
                                 <Select
@@ -488,14 +470,32 @@ export default function PengaturanPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Pengaturan Absensi</CardTitle>
-                            <CardDescription>Atur mode absen, toleransi keterlambatan, dan token.</CardDescription>
+                             <CardDescription>Atur jam operasional, mode absen, toleransi keterlambatan, dan token.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="grid gap-2">
+                                    <Label>Jam Masuk Sekolah</Label>
+                                    <Input
+                                        type="time"
+                                        value={settings.attendance.school_start_time}
+                                        onChange={e => set("attendance", "school_start_time", e.target.value)}
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>Jam Pulang Sekolah</Label>
+                                    <Input
+                                        type="time"
+                                        value={settings.attendance.school_end_time}
+                                        onChange={e => set("attendance", "school_end_time", e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <Separator />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid gap-2">
                                     <Label>Mode Absensi</Label>
                                     <Select
-                                        value={settings.attendance.absent_mode}
                                         onValueChange={v => set("attendance", "absent_mode", v)}
                                     >
                                         <SelectTrigger className="w-full">
