@@ -14,12 +14,13 @@ class Teacher extends Model
         'nip',
     ];
 
-    protected $hidden   = ['id', 'user_id'];
-    protected $appends  = ['has_user', 'email'];
+    protected $hidden = ['id', 'user_id'];
+
+    protected $appends = ['has_user', 'email'];
 
     public function getHasUserAttribute(): bool
     {
-        return !is_null($this->user_id);
+        return ! is_null($this->user_id);
     }
 
     public function getEmailAttribute(): ?string

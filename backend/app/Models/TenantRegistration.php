@@ -15,7 +15,7 @@ class TenantRegistration extends Model
         'contact_person',
         'plan_id',
         'status',
-        'rejection_reason'
+        'rejection_reason',
     ];
 
     protected $casts = [

@@ -352,6 +352,7 @@ export default function OrderKartuSiswaPage() {
                                                                             width={800}
                                                                             height={500}
                                                                             className="max-w-full max-h-full object-contain drop-shadow-2xl rounded-lg"
+                                                                            unoptimized={true}
                                                                         />
                                                                     ) : (
                                                                         <div className="w-full h-full bg-slate-100 flex items-center justify-center rounded-xl">

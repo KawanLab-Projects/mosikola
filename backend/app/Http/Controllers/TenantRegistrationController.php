@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Services\TenantRegistrationService;
-use Illuminate\Http\Request;
 use Exception;
+use Illuminate\Http\Request;
 
 class TenantRegistrationController extends Controller
 {
@@ -27,11 +27,11 @@ class TenantRegistrationController extends Controller
 
             return response()->json([
                 'message' => 'Pendaftaran berhasil. Silakan tunggu konfirmasi melalui email atau WhatsApp.',
-                'data' => $registration
+                'data' => $registration,
             ], 201);
         } catch (Exception $e) {
             return response()->json([
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 422);
         }
     }
@@ -39,7 +39,7 @@ class TenantRegistrationController extends Controller
     public function index()
     {
         return response()->json([
-            'data' => $this->registrationService->listRegistrations()
+            'data' => $this->registrationService->listRegistrations(),
         ]);
     }
 
@@ -47,13 +47,14 @@ class TenantRegistrationController extends Controller
     {
         try {
             $registration = $this->registrationService->approveRegistration($id);
+
             return response()->json([
                 'message' => 'Pendaftaran berhasil disetujui.',
-                'data' => $registration
+                'data' => $registration,
             ]);
         } catch (Exception $e) {
             return response()->json([
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 422);
         }
     }

@@ -17,7 +17,7 @@ class TenantRegistrationFactory extends Factory
     public function definition(): array
     {
         return [
-            'school_name' => $this->faker->company() . ' School',
+            'school_name' => $this->faker->company().' School',
             'slug' => $this->faker->unique()->slug(),
             'email' => $this->faker->unique()->safeEmail(),
             'phone' => $this->faker->phoneNumber(),

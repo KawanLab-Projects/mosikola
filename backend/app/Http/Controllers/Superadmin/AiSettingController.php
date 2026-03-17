@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\GlobalSetting;
-use Illuminate\Support\Facades\Http;
 use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class AiSettingController extends Controller
 {
@@ -16,6 +16,7 @@ class AiSettingController extends Controller
     public function index()
     {
         $settings = GlobalSetting::whereIn('key', ['ai_provider', 'ai_model', 'ai_api_key'])->get();
+
         return response()->json([
             'status' => 'success',
             'data' => $settings->pluck('value', 'key'),
@@ -67,8 +68,8 @@ class AiSettingController extends Controller
                     'Content-Type' => 'application/json',
                 ])->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [
                     'contents' => [
-                        ['parts' => [['text' => 'Hello. Reply with OK if you understand.']]]
-                    ]
+                        ['parts' => [['text' => 'Hello. Reply with OK if you understand.']]],
+                    ],
                 ]);
 
                 if ($response->successful()) {
@@ -79,18 +80,18 @@ class AiSettingController extends Controller
                 } else {
                     return response()->json([
                         'status' => 'error',
-                        'message' => 'Gemini API merespons dengan error (Status: ' . $response->status() . '). Periksa kembali API Key dan nama Model yang digunakan.',
-                        'details' => $response->json()
+                        'message' => 'Gemini API merespons dengan error (Status: '.$response->status().'). Periksa kembali API Key dan nama Model yang digunakan.',
+                        'details' => $response->json(),
                     ], 400);
                 }
             } elseif ($provider === 'openai') {
                 $response = Http::withoutVerifying()->timeout(10)->withHeaders([
-                    'Authorization' => 'Bearer ' . $apiKey,
+                    'Authorization' => 'Bearer '.$apiKey,
                     'Content-Type' => 'application/json',
                 ])->post('https://api.openai.com/v1/chat/completions', [
                     'model' => $model,
                     'messages' => [
-                        ['role' => 'user', 'content' => 'Hello. Reply with OK if you understand.']
+                        ['role' => 'user', 'content' => 'Hello. Reply with OK if you understand.'],
                     ],
                     'max_tokens' => 10,
                 ]);
@@ -103,8 +104,8 @@ class AiSettingController extends Controller
                 } else {
                     return response()->json([
                         'status' => 'error',
-                        'message' => 'OpenAI API merespons dengan error (Status: ' . $response->status() . '). Periksa kembali API Key dan nama Model yang digunakan.',
-                        'details' => $response->json()
+                        'message' => 'OpenAI API merespons dengan error (Status: '.$response->status().'). Periksa kembali API Key dan nama Model yang digunakan.',
+                        'details' => $response->json(),
                     ], 400);
                 }
             }
@@ -113,7 +114,7 @@ class AiSettingController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gagal terhubung ke server LLM: ' . $e->getMessage(),
+                'message' => 'Gagal terhubung ke server LLM: '.$e->getMessage(),
             ], 500);
         }
     }

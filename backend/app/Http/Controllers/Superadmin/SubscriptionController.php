@@ -15,6 +15,7 @@ class SubscriptionController extends Controller
     public function index()
     {
         $subscriptions = Subscription::with(['plan', 'tenant'])->get();
+
         return response()->json(['data' => $subscriptions]);
     }
 

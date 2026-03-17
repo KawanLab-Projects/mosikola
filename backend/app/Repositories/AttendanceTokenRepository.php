@@ -9,8 +9,11 @@ use Illuminate\Support\Str;
 interface AttendanceTokenRepoInterface
 {
     public function generateToken(): AttendanceToken;
+
     public function validateToken($token): bool;
+
     public function getLastToken(): ?AttendanceToken;
+
     public function removeOldTokens(): void;
 }
 
@@ -20,14 +23,14 @@ class AttendanceTokenRepository implements AttendanceTokenRepoInterface
     {
         return AttendanceToken::create([
             'token' => Str::uuid(),
-            'expires_at' => Carbon::now()->addSecond(20)
+            'expires_at' => Carbon::now()->addSecond(20),
         ]);
     }
 
     public function getLastToken(): ?AttendanceToken
     {
         $lastToken = AttendanceToken::latest()->first();
-        if (!$lastToken) {
+        if (! $lastToken) {
             return $this->generateToken();
         }
 

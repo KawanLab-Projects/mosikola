@@ -9,10 +9,15 @@ use Illuminate\Support\Collection;
 interface ViolationRepoInterface
 {
     public function getAllByTenant(int $tenantId): Collection;
+
     public function getById(int $id): ?Violation;
+
     public function create(array $data): Violation;
+
     public function update(Violation $violation, array $data): bool;
+
     public function delete(Violation $violation): bool;
+
     public function isUsedByStudentViolation(int $violationId): bool;
 }
 

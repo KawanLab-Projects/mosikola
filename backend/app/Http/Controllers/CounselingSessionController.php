@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Services\CounselingSessionService;
+use Illuminate\Http\Request;
 
 class CounselingSessionController extends Controller
 {
@@ -18,6 +18,7 @@ class CounselingSessionController extends Controller
     {
         $perPage = $request->query('per_page', 15);
         $sessions = $this->service->getSessionsForTeacher($request->user(), $perPage);
+
         return response()->json($sessions);
     }
 
@@ -40,7 +41,7 @@ class CounselingSessionController extends Controller
         }
         $student = $studentQuery->first();
 
-        if (!$student) {
+        if (! $student) {
             return response()->json(['message' => 'Siswa tidak ditemukan.'], 404);
         }
 
@@ -54,12 +55,14 @@ class CounselingSessionController extends Controller
         }
 
         $session = $this->service->createSession($validated);
+
         return response()->json(['data' => $session], 201);
     }
 
     public function show($id)
     {
         $session = $this->service->getSession($id);
+
         return response()->json(['data' => $session]);
     }
 
@@ -73,12 +76,14 @@ class CounselingSessionController extends Controller
         ]);
 
         $session = $this->service->updateSession($id, $validated);
+
         return response()->json(['data' => $session]);
     }
 
     public function destroy($id)
     {
         $this->service->deleteSession($id);
+
         return response()->json(null, 204);
     }
 }

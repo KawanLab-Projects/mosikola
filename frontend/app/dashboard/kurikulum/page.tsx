@@ -428,13 +428,20 @@ function CurriculumItemsCard({ academicYears }: { academicYears: AcademicYear[] 
             const res = await api.get("/curriculum-items/suggestions", {
                 params: { academic_year_id: selectedYearId, classroom_public_id: selectedClassroomId }
             })
-            const data: CurriculumSuggestion[] = res.data.data || []
+            // Handle possibility where backend returns object instead of array (e.g. missing sequential keys)
+            let rawData = res.data.data || res.data || []
+            if (typeof rawData === 'object' && !Array.isArray(rawData)) {
+                rawData = Object.values(rawData)
+            }
+            const data: CurriculumSuggestion[] = rawData
+
             // Prep the selected_subject_public_id if suggestion found
             setSuggestions(data.map(s => ({
                 ...s,
                 selected_subject_public_id: s.suggested_subject_public_id || ""
             })))
-        } catch {
+        } catch (error) {
+            console.error(error)
             toast.error("Gagal memuat saran penugasan")
         } finally {
             setIsLoadingSuggestions(false)

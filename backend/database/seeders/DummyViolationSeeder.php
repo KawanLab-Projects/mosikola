@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\Tenant;
 use App\Models\Student;
-use App\Models\Violation;
 use App\Models\StudentViolation;
+use App\Models\Tenant;
 use App\Models\User;
+use App\Models\Violation;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class DummyViolationSeeder extends Seeder
 {
@@ -20,16 +20,18 @@ class DummyViolationSeeder extends Seeder
     public function run()
     {
         $tenant = Tenant::first();
-        if (!$tenant) {
-            $this->command->error("No tenant found. Please migrate and seed basic data first.");
+        if (! $tenant) {
+            $this->command->error('No tenant found. Please migrate and seed basic data first.');
+
             return;
         }
 
         // Get the first active student
         $student = Student::where('tenant_id', $tenant->id)->where('status', 'active')->first();
 
-        if (!$student) {
+        if (! $student) {
             $this->command->error("No active student found in tenant {$tenant->name}.");
+
             return;
         }
 
@@ -68,6 +70,6 @@ class DummyViolationSeeder extends Seeder
 
         $totalPoints = collect($createdViolations)->sum('points');
 
-        $this->command->info("Successfully added {$totalPoints} violation points to student: " . $student->name);
+        $this->command->info("Successfully added {$totalPoints} violation points to student: ".$student->name);
     }
 }

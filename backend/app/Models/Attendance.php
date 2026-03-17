@@ -19,9 +19,10 @@ class Attendance extends Model
     ];
 
     protected $hidden = ['id', 'created_at', 'updated_at'];
+
     protected $casts = [
         'attendance_date' => 'date:Y-m-d',
-        'attended_at'     => 'datetime',
+        'attended_at' => 'datetime',
     ];
 
     public function student()
@@ -36,12 +37,12 @@ class Attendance extends Model
 
     public function getTerlambatAttribute(): int
     {
-        if (!$this->attended_at) {
+        if (! $this->attended_at) {
             return 0;
         }
 
         $jamWajib = Carbon::parse(
-            $this->attended_at->format('Y-m-d') . ' 07:30'
+            $this->attended_at->format('Y-m-d').' 07:30'
         );
 
         if ($this->attended_at <= $jamWajib) {

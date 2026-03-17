@@ -12,7 +12,8 @@ class TenantSettingController extends Controller
     private function resolveTenantId(Request $request): int
     {
         $tenantUser = $request->user()->tenantUsers()->where('is_active', true)->first();
-        abort_if(!$tenantUser, 403, 'Akses ditolak.');
+        abort_if(! $tenantUser, 403, 'Akses ditolak.');
+
         return $tenantUser->tenant_id;
     }
 
@@ -28,9 +29,9 @@ class TenantSettingController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'settings'         => 'required|array',
-            'settings.*.group' => 'required|string|in:' . implode(',', array_keys(TenantSettingService::SCHEMA)),
-            'settings.*.key'   => 'required|string',
+            'settings' => 'required|array',
+            'settings.*.group' => 'required|string|in:'.implode(',', array_keys(TenantSettingService::SCHEMA)),
+            'settings.*.key' => 'required|string',
             'settings.*.value' => 'nullable|string',
         ]);
 
@@ -57,13 +58,13 @@ class TenantSettingController extends Controller
             [
                 'group' => 'school',
                 'key' => 'school_logo_url',
-                'value' => $path
-            ]
+                'value' => $path,
+            ],
         ]);
 
         return response()->json([
             'message' => 'Logo berhasil diunggah.',
-            'path' => \Illuminate\Support\Facades\Storage::disk('s3')->url($path)
+            'path' => \Illuminate\Support\Facades\Storage::disk('s3')->url($path),
         ]);
     }
 }

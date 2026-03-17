@@ -41,13 +41,13 @@ class LessonJournalService
     public function createJournal(int $teacherId, array $data): LessonJournal
     {
         $schedule = $this->repo->findScheduleById($data['schedule_id']);
-        abort_if(!$schedule, 404, 'Jadwal tidak ditemukan.');
+        abort_if(! $schedule, 404, 'Jadwal tidak ditemukan.');
         abort_if($schedule->teacher_id !== $teacherId, 403, 'Jadwal ini bukan milik Anda.');
 
         return $this->repo->createJournal([
             ...$data,
             'tenant_id' => $schedule->tenant_id,
-            'status'    => 'filled',
+            'status' => 'filled',
             'filled_at' => now(),
         ]);
     }
@@ -59,8 +59,8 @@ class LessonJournalService
      */
     public function updateJournal(int $teacherId, int $journalId, array $data): LessonJournal
     {
-        $journal  = $this->repo->findJournalById($journalId);
-        abort_if(!$journal, 404, 'Jurnal tidak ditemukan.');
+        $journal = $this->repo->findJournalById($journalId);
+        abort_if(! $journal, 404, 'Jurnal tidak ditemukan.');
 
         $schedule = $journal->schedule;
         abort_if($schedule->teacher_id !== $teacherId, 403, 'Jurnal ini bukan milik Anda.');
@@ -73,7 +73,7 @@ class LessonJournalService
     public function getAttendances(int $journalId): Collection
     {
         $journal = $this->repo->findJournalById($journalId);
-        abort_if(!$journal, 404, 'Jurnal tidak ditemukan.');
+        abort_if(! $journal, 404, 'Jurnal tidak ditemukan.');
 
         return $this->repo->getStudentsWithAttendance($journal);
     }
@@ -86,7 +86,7 @@ class LessonJournalService
     public function saveAttendances(int $teacherId, int $journalId, array $rows): void
     {
         $journal = $this->repo->findJournalById($journalId);
-        abort_if(!$journal, 404, 'Jurnal tidak ditemukan.');
+        abort_if(! $journal, 404, 'Jurnal tidak ditemukan.');
         abort_if($journal->schedule->teacher_id !== $teacherId, 403, 'Jurnal ini bukan milik Anda.');
 
         $this->repo->upsertAttendance($journalId, $rows);

@@ -12,7 +12,8 @@ class SubjectController extends Controller
     private function resolveTenantId(Request $request): int
     {
         $tenantUser = $request->user()->tenantUsers()->where('is_active', true)->first();
-        abort_if(!$tenantUser, 403, 'Akses ditolak.');
+        abort_if(! $tenantUser, 403, 'Akses ditolak.');
+
         return $tenantUser->tenant_id;
     }
 
@@ -35,7 +36,7 @@ class SubjectController extends Controller
         $validated['tenant_id'] = $this->resolveTenantId($request);
 
         return response()->json([
-            'data'    => $this->service->store($validated),
+            'data' => $this->service->store($validated),
             'message' => 'Mata pelajaran berhasil ditambahkan.',
         ], 201);
     }
@@ -49,7 +50,7 @@ class SubjectController extends Controller
         $exists = \App\Models\Subject::where('tenant_id', $tenantId)->exists();
         if ($exists) {
             return response()->json([
-                'message' => 'Gagal menambahkan mata pelajaran default. Table sudah terisi.'
+                'message' => 'Gagal menambahkan mata pelajaran default. Table sudah terisi.',
             ], 400);
         }
 
@@ -66,7 +67,7 @@ class SubjectController extends Controller
 
         $data = array_map(function ($item) use ($tenantId) {
             return array_merge($item, [
-                'tenant_id'  => $tenantId,
+                'tenant_id' => $tenantId,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -83,9 +84,10 @@ class SubjectController extends Controller
     public function show($public_id)
     {
         $subject = $this->service->getByPublicId($public_id);
-        if (!$subject) {
+        if (! $subject) {
             return response()->json(['message' => 'Mata pelajaran tidak ditemukan.'], 404);
         }
+
         return response()->json(['data' => $subject]);
     }
 
@@ -98,9 +100,10 @@ class SubjectController extends Controller
         ]);
 
         $updated = $this->service->update($public_id, $validated);
-        if (!$updated) {
+        if (! $updated) {
             return response()->json(['message' => 'Mata pelajaran tidak ditemukan.'], 404);
         }
+
         return response()->json(['message' => 'Mata pelajaran berhasil diperbarui.']);
     }
 
@@ -108,9 +111,10 @@ class SubjectController extends Controller
     public function destroy($public_id)
     {
         $deleted = $this->service->delete($public_id);
-        if (!$deleted) {
+        if (! $deleted) {
             return response()->json(['message' => 'Mata pelajaran tidak ditemukan.'], 404);
         }
+
         return response()->json(['message' => 'Mata pelajaran berhasil dihapus.']);
     }
 }

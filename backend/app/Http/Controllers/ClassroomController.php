@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Student;
-use App\Models\StudyProgram;
 use App\Services\ClassroomService;
 use App\Services\StudentService;
 use Illuminate\Http\Request;
@@ -18,6 +16,7 @@ class ClassroomController extends Controller
     public function index($studyProgramPublicId)
     {
         $classroom = $this->service->getAllByStudyProgram($studyProgramPublicId);
+
         return response()->json([
             'data' => $classroom,
         ]);
@@ -27,18 +26,18 @@ class ClassroomController extends Controller
     public function indexByTenant(Request $request)
     {
         $tenantUser = $request->user()->tenantUsers()->where('is_active', true)->with('tenant')->first();
-        abort_if(!$tenantUser, 403, 'Akses ditolak.');
+        abort_if(! $tenantUser, 403, 'Akses ditolak.');
 
         $classrooms = $this->service->getAllByTenant($tenantUser->tenant->id);
+
         return response()->json(['data' => $classrooms]);
     }
-
 
     public function store(Request $request, $studyProgram)
     {
         $request->validate([
-            'name'        => 'required|string|max:255',
-            'short'       => 'required|string|max:255',
+            'name' => 'required|string|max:255',
+            'short' => 'required|string|max:255',
             'grade_level' => 'required|integer|min:1|max:12',
         ]);
 
@@ -56,16 +55,16 @@ class ClassroomController extends Controller
     public function storeDirectly(Request $request)
     {
         $request->validate([
-            'name'        => 'required|string|max:255',
-            'short'       => 'required|string|max:255',
+            'name' => 'required|string|max:255',
+            'short' => 'required|string|max:255',
             'grade_level' => 'required|integer|min:1|max:12',
         ]);
 
         $tenantUser = $request->user()->tenantUsers()->where('is_active', true)->with('tenant')->first();
-        abort_if(!$tenantUser, 403, 'Akses ditolak.');
+        abort_if(! $tenantUser, 403, 'Akses ditolak.');
 
         return response()->json([
-            'data'    => $this->service->store(array_merge(
+            'data' => $this->service->store(array_merge(
                 $request->only(['name', 'short', 'grade_level']),
                 ['tenant_id' => $tenantUser->tenant->id]
             )),
@@ -76,19 +75,19 @@ class ClassroomController extends Controller
     public function show($public_id)
     {
         $classroom = $this->service->getByPublicId($public_id);
-        if (!$classroom) {
+        if (! $classroom) {
             return response()->json(['message' => 'Ruang kelas tidak ditemukan.'], 404);
         }
 
         return response()->json([
-            'data' => $classroom
+            'data' => $classroom,
         ]);
     }
 
     public function update(Request $request, $public_id)
     {
         $classroom = $this->service->getByPublicId($public_id);
-        if (!$classroom) {
+        if (! $classroom) {
             return response()->json(['message' => 'Ruang kelas tidak ditemukan.'], 404);
         }
 
@@ -111,7 +110,7 @@ class ClassroomController extends Controller
     public function destroy($public_id)
     {
         $classroom = $this->service->getByPublicId($public_id);
-        if (!$classroom) {
+        if (! $classroom) {
             return response()->json(['message' => 'Ruang kelas tidak ditemukan.'], 404);
         }
 
@@ -156,7 +155,7 @@ class ClassroomController extends Controller
     public function getStudents($public_id)
     {
         $classroom = $this->service->getByPublicId($public_id);
-        if (!$classroom) {
+        if (! $classroom) {
             return response()->json(['message' => 'Ruang kelas tidak ditemukan.'], 404);
         }
 

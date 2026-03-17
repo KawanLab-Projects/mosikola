@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Superadmin;
 use App\Http\Controllers\Controller;
 use App\Models\IdCardTemplate;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -19,6 +18,7 @@ class IdCardTemplateController extends Controller
     public function show($id)
     {
         $template = IdCardTemplate::where('public_id', $id)->firstOrFail();
+
         return response()->json($template);
     }
 
@@ -31,7 +31,7 @@ class IdCardTemplateController extends Controller
             'back_background_image' => 'nullable|image|max:2048',
         ]);
 
-        $template = new IdCardTemplate();
+        $template = new IdCardTemplate;
         $template->public_id = Str::uuid()->toString();
         $template->name = $validated['name'];
         $template->price = $validated['price'];
@@ -48,12 +48,16 @@ class IdCardTemplateController extends Controller
 
         if ($request->hasFile('background_image')) {
             $path = $request->file('background_image')->store('id-card-templates', 's3');
-            if ($path) $template->background_path = $path;
+            if ($path) {
+                $template->background_path = $path;
+            }
         }
 
         if ($request->hasFile('back_background_image')) {
             $path = $request->file('back_background_image')->store('id-card-templates', 's3');
-            if ($path) $template->back_background_path = $path;
+            if ($path) {
+                $template->back_background_path = $path;
+            }
         }
 
         $template->save();
@@ -76,11 +80,21 @@ class IdCardTemplateController extends Controller
             'thumbnail_image' => 'nullable|image|max:2048',
         ]);
 
-        if (isset($validated['name'])) $template->name = $validated['name'];
-        if (isset($validated['price'])) $template->price = $validated['price'];
-        if (isset($validated['canvas_state'])) $template->canvas_state = $validated['canvas_state'];
-        if (isset($validated['is_active'])) $template->is_active = $validated['is_active'];
-        if (isset($validated['requires_transparent_photo'])) $template->requires_transparent_photo = $validated['requires_transparent_photo'];
+        if (isset($validated['name'])) {
+            $template->name = $validated['name'];
+        }
+        if (isset($validated['price'])) {
+            $template->price = $validated['price'];
+        }
+        if (isset($validated['canvas_state'])) {
+            $template->canvas_state = $validated['canvas_state'];
+        }
+        if (isset($validated['is_active'])) {
+            $template->is_active = $validated['is_active'];
+        }
+        if (isset($validated['requires_transparent_photo'])) {
+            $template->requires_transparent_photo = $validated['requires_transparent_photo'];
+        }
 
         if ($request->hasFile('background_image')) {
             $path = $request->file('background_image')->store('id-card-templates', 's3');

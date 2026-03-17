@@ -12,6 +12,7 @@ class TeacherHomeroomController extends Controller
     private function getHomeroomClass(Request $request)
     {
         $teacher = $request->user()->teacher;
+
         return $teacher ? TeacherAssignment::where('teacher_id', $teacher->id)
             ->where('assignment_type', 'wali_kelas')
             ->first() : null;
@@ -21,7 +22,7 @@ class TeacherHomeroomController extends Controller
     {
         $homeroom = $this->getHomeroomClass($request);
 
-        if (!$homeroom || !$homeroom->classroom_id) {
+        if (! $homeroom || ! $homeroom->classroom_id) {
             return response()->json(['message' => 'Anda bukan wali kelas.'], 403);
         }
 
@@ -36,7 +37,7 @@ class TeacherHomeroomController extends Controller
             ->get();
 
         return response()->json([
-            'data' => $attendances
+            'data' => $attendances,
         ]);
     }
 
@@ -44,7 +45,7 @@ class TeacherHomeroomController extends Controller
     {
         $homeroom = $this->getHomeroomClass($request);
 
-        if (!$homeroom || !$homeroom->classroom_id) {
+        if (! $homeroom || ! $homeroom->classroom_id) {
             return response()->json(['message' => 'Anda bukan wali kelas.'], 403);
         }
 
@@ -64,22 +65,22 @@ class TeacherHomeroomController extends Controller
                     'filled_at' => $journal->filled_at,
                     'status' => $journal->status,
                     'subject' => [
-                        'name' => $journal->schedule->subject->name ?? 'Unknown'
+                        'name' => $journal->schedule->subject->name ?? 'Unknown',
                     ],
                     'teacher' => [
-                        'name' => $journal->schedule->teacher->name ?? 'Unknown'
+                        'name' => $journal->schedule->teacher->name ?? 'Unknown',
                     ],
                     'attendance_summary' => [
                         'hadir' => $journal->attendances->where('status', 'hadir')->count(),
                         'sakit' => $journal->attendances->where('status', 'sakit')->count(),
                         'izin' => $journal->attendances->where('status', 'izin')->count(),
                         'alpha' => $journal->attendances->where('status', 'alpha')->count(),
-                    ]
+                    ],
                 ];
             });
 
         return response()->json([
-            'data' => $journals
+            'data' => $journals,
         ]);
     }
 }

@@ -24,7 +24,7 @@ class IdCardFulfillmentController extends Controller
 
         $validated = $request->validate([
             'status' => 'sometimes|in:pending,paid,on_progress,shipping,completed',
-            'shipping_receipt_number' => 'sometimes|string|nullable'
+            'shipping_receipt_number' => 'sometimes|string|nullable',
         ]);
 
         if (array_key_exists('status', $validated)) {
@@ -51,7 +51,7 @@ class IdCardFulfillmentController extends Controller
 
         return response()->json([
             'message' => 'Asset generation ready. Frontend can construct the images using this data.',
-            'order' => $order
+            'order' => $order,
         ]);
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Services\BkDashboardService;
+use Illuminate\Http\Request;
 
 class BkDashboardController extends Controller
 {
@@ -17,6 +17,7 @@ class BkDashboardController extends Controller
     public function getStats(Request $request)
     {
         $stats = $this->service->getStats($request->user());
+
         return response()->json($stats);
     }
 
@@ -24,6 +25,7 @@ class BkDashboardController extends Controller
     {
         $limit = $request->query('limit', 10);
         $students = $this->service->getNeedsAttention($request->user(), $limit);
+
         return response()->json(['data' => $students]);
     }
 }

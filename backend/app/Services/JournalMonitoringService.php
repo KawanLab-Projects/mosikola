@@ -41,14 +41,14 @@ class JournalMonitoringService
         $scheduleIds = $schedulesQuery->pluck('id')->toArray();
         $journals = collect();
 
-        if (!empty($scheduleIds)) {
+        if (! empty($scheduleIds)) {
             $journals = LessonJournal::with('attendances')
                 ->whereIn('schedule_id', $scheduleIds)
                 ->whereBetween('date', [$startDate, $endDate])
                 ->get()
                 ->groupBy(function ($journal) {
                     // Group by schedule_id AND date
-                    return $journal->schedule_id . '_' . $journal->date->format('Y-m-d');
+                    return $journal->schedule_id.'_'.$journal->date->format('Y-m-d');
                 });
         }
 
@@ -68,44 +68,44 @@ class JournalMonitoringService
                 })->first();
 
                 return [
-                    'id'           => $schedule->id,
-                    'day_of_week'  => $schedule->day_of_week,
+                    'id' => $schedule->id,
+                    'day_of_week' => $schedule->day_of_week,
                     'period_start' => $schedule->period_start,
-                    'period_end'   => $schedule->period_end,
-                    'start_time'   => $schedule->start_time,
-                    'end_time'     => $schedule->end_time,
-                    'subject'      => $schedule->subject ? [
+                    'period_end' => $schedule->period_end,
+                    'start_time' => $schedule->start_time,
+                    'end_time' => $schedule->end_time,
+                    'subject' => $schedule->subject ? [
                         'name' => $schedule->subject->name,
-                        'code' => $schedule->subject->code
+                        'code' => $schedule->subject->code,
                     ] : null,
-                    'classroom'    => $schedule->classroom ? [
-                        'name'  => $schedule->classroom->name,
-                        'short' => $schedule->classroom->short
+                    'classroom' => $schedule->classroom ? [
+                        'name' => $schedule->classroom->name,
+                        'short' => $schedule->classroom->short,
                     ] : null,
-                    'journal'      => $scheduleJournals ? [
-                        'id'          => $scheduleJournals->id,
-                        'date'        => $scheduleJournals->date->format('Y-m-d'),
-                        'status'      => $scheduleJournals->status,
-                        'filled_at'   => $scheduleJournals->filled_at ? $scheduleJournals->filled_at->toIso8601String() : null,
-                        'topic'       => $scheduleJournals->topic,
-                        'notes'       => $scheduleJournals->notes,
-                        'homework'    => $scheduleJournals->homework,
-                        'attendance'  => [
+                    'journal' => $scheduleJournals ? [
+                        'id' => $scheduleJournals->id,
+                        'date' => $scheduleJournals->date->format('Y-m-d'),
+                        'status' => $scheduleJournals->status,
+                        'filled_at' => $scheduleJournals->filled_at ? $scheduleJournals->filled_at->toIso8601String() : null,
+                        'topic' => $scheduleJournals->topic,
+                        'notes' => $scheduleJournals->notes,
+                        'homework' => $scheduleJournals->homework,
+                        'attendance' => [
                             'hadir' => $scheduleJournals->attendances->where('status', 'hadir')->count(),
                             'sakit' => $scheduleJournals->attendances->where('status', 'sakit')->count(),
-                            'izin'  => $scheduleJournals->attendances->where('status', 'izin')->count(),
+                            'izin' => $scheduleJournals->attendances->where('status', 'izin')->count(),
                             'alpha' => $scheduleJournals->attendances->where('status', 'alpha')->count(),
-                        ]
+                        ],
                     ] : null,
                 ];
             });
 
             return [
                 'teacher_id' => $teacher->id,
-                'public_id'  => $teacher->public_id,
-                'name'       => $teacher->name,
-                'nip'        => $teacher->nip,
-                'schedules'  => $mappedSchedules,
+                'public_id' => $teacher->public_id,
+                'name' => $teacher->name,
+                'nip' => $teacher->nip,
+                'schedules' => $mappedSchedules,
             ];
         });
     }

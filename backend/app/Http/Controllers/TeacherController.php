@@ -12,7 +12,8 @@ class TeacherController extends Controller
     private function resolveTenant(Request $request)
     {
         $tenantUser = $request->user()->tenantUsers()->where('is_active', true)->with('tenant')->first();
-        abort_if(!$tenantUser, 403, 'Akses ditolak.');
+        abort_if(! $tenantUser, 403, 'Akses ditolak.');
+
         return $tenantUser->tenant;
     }
 
@@ -29,8 +30,8 @@ class TeacherController extends Controller
                 // Group by academic year to only show one badge per year
                 $guruWaliYears = $teacher->guruWaliStudents->pluck('academic_year_id')->unique();
                 foreach ($guruWaliYears as $yearId) {
-                    $assignments->push((object)[
-                        'id' => 'gw_' . $yearId,
+                    $assignments->push((object) [
+                        'id' => 'gw_'.$yearId,
                         'assignment_type' => 'guru_wali',
                         'academic_year_id' => $yearId,
                     ]);
@@ -38,6 +39,7 @@ class TeacherController extends Controller
             }
 
             $teacher->setRelation('assignments', $assignments);
+
             return $teacher;
         });
 
@@ -48,9 +50,9 @@ class TeacherController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'  => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'nip'   => 'nullable|string|unique:teachers,nip',
+            'nip' => 'nullable|string|unique:teachers,nip',
         ]);
 
         $data['tenant_id'] = $this->resolveTenant($request)->id;
@@ -67,11 +69,11 @@ class TeacherController extends Controller
     {
         $data = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'nip'  => 'nullable|string|unique:teachers,nip,' . $teacherId . ',public_id',
+            'nip' => 'nullable|string|unique:teachers,nip,'.$teacherId.',public_id',
         ]);
 
         $teacher = $this->teacherService->update($teacherId, $data);
-        abort_if(!$teacher, 404, 'Guru tidak ditemukan.');
+        abort_if(! $teacher, 404, 'Guru tidak ditemukan.');
 
         return response()->json([
             'message' => 'Data guru berhasil diperbarui.',
@@ -83,7 +85,7 @@ class TeacherController extends Controller
     public function destroy($teacherId)
     {
         $deleted = $this->teacherService->delete($teacherId);
-        abort_if(!$deleted, 404, 'Guru tidak ditemukan.');
+        abort_if(! $deleted, 404, 'Guru tidak ditemukan.');
 
         return response()->json(['message' => 'Guru berhasil dihapus.']);
     }
@@ -92,7 +94,7 @@ class TeacherController extends Controller
     public function attachUser(Request $request, $teacherId)
     {
         $data = $request->validate([
-            'email'    => 'required|email|unique:users,email',
+            'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
         ]);
 
@@ -104,7 +106,7 @@ class TeacherController extends Controller
 
         return response()->json([
             'message' => 'Akun login berhasil dibuat dan dihubungkan ke guru.',
-            'data'    => $result,
+            'data' => $result,
         ]);
     }
 
@@ -116,7 +118,7 @@ class TeacherController extends Controller
             return response()->json(['data' => []]);
         }
 
-        $users = \App\Models\User::where('email', 'like', '%' . $email . '%')
+        $users = \App\Models\User::where('email', 'like', '%'.$email.'%')
             ->limit(8)
             ->get(['id', 'email', 'name']);
 
@@ -138,7 +140,7 @@ class TeacherController extends Controller
 
         return response()->json([
             'message' => 'Akun berhasil dihubungkan ke guru.',
-            'data'    => $result,
+            'data' => $result,
         ]);
     }
 
@@ -158,8 +160,8 @@ class TeacherController extends Controller
             }
             $guruWaliYears = $query->unique('academic_year_id');
             foreach ($guruWaliYears as $student) {
-                $assignments->push((object)[
-                    'id' => 'gw_' . $student->academic_year_id,
+                $assignments->push((object) [
+                    'id' => 'gw_'.$student->academic_year_id,
                     'assignment_type' => 'guru_wali',
                     'academic_year_id' => $student->academic_year_id,
                     'academic_year' => $student->academicYear,
@@ -174,10 +176,10 @@ class TeacherController extends Controller
     public function storeAssignment(Request $request, $teacherId)
     {
         $data = $request->validate([
-            'classroom_id'     => 'required|string|exists:classrooms,public_id',
+            'classroom_id' => 'required|string|exists:classrooms,public_id',
             'academic_year_id' => 'required|integer|exists:academic_years,id',
-            'assignment_type'  => 'required|in:wali_kelas,guru_bk,guru_mapel',
-            'subject'          => 'nullable|string|max:100',
+            'assignment_type' => 'required|in:wali_kelas,guru_bk,guru_mapel',
+            'subject' => 'nullable|string|max:100',
         ]);
 
         try {
@@ -186,10 +188,10 @@ class TeacherController extends Controller
             return response()->json(['message' => $e->getMessage()], 422);
         }
 
-        abort_if(!$assignment, 404, 'Guru atau kelas tidak ditemukan.');
+        abort_if(! $assignment, 404, 'Guru atau kelas tidak ditemukan.');
 
         return response()->json([
-            'message'    => 'Penugasan berhasil ditambahkan.',
+            'message' => 'Penugasan berhasil ditambahkan.',
             'assignment' => $assignment->load(['classroom', 'academicYear']),
         ], 201);
     }
@@ -198,7 +200,7 @@ class TeacherController extends Controller
     public function destroyAssignment($teacherId, $assignmentId)
     {
         $deleted = $this->teacherService->removeAssignment($teacherId, (int) $assignmentId);
-        abort_if(!$deleted, 404, 'Penugasan tidak ditemukan.');
+        abort_if(! $deleted, 404, 'Penugasan tidak ditemukan.');
 
         return response()->json(['message' => 'Penugasan berhasil dihapus.']);
     }

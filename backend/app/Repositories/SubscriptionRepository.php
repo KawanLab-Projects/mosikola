@@ -23,12 +23,12 @@ class SubscriptionRepository implements SubscriptionRepoInterface
         }
 
         return Subscription::create([
-            'tenant_id'    => $tenantId,
-            'plan_id'      => $planId,
+            'tenant_id' => $tenantId,
+            'plan_id' => $planId,
             'locked_price' => $lockedPrice,
-            'start_date'   => now()->toDateString(),
-            'end_date'     => now()->addYear()->toDateString(),
-            'is_active'    => true,
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addYear()->toDateString(),
+            'is_active' => true,
         ]);
     }
 }

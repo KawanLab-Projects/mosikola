@@ -23,7 +23,7 @@ class AttendanceController extends Controller
             ->where('expires_at', '>', now())
             ->first();
 
-        if (!$tokenRecord) {
+        if (! $tokenRecord) {
             return response()->json(['message' => 'Invalid or expired QR Token'], 422);
         }
 
@@ -43,13 +43,13 @@ class AttendanceController extends Controller
         ]);
 
         $kioskToken = $request->header('x-kiosk-token');
-        if (!$kioskToken) {
+        if (! $kioskToken) {
             return response()->json(['message' => 'Unauthorized Kiosk'], 401);
         }
 
         // Find tenant via kiosk token
         $tenantSetting = TenantSetting::where('key', 'kiosk_token')->where('value', $kioskToken)->first();
-        if (!$tenantSetting) {
+        if (! $tenantSetting) {
             return response()->json(['message' => 'Invalid Kiosk Token'], 401);
         }
 
@@ -73,7 +73,7 @@ class AttendanceController extends Controller
         ]);
 
         $kioskToken = $request->header('x-kiosk-token');
-        if (!$kioskToken) {
+        if (! $kioskToken) {
             return response()->json(['message' => 'Unauthorized Kiosk'], 401);
         }
 
@@ -82,7 +82,7 @@ class AttendanceController extends Controller
             ->where('value', $kioskToken)
             ->first();
 
-        if (!$tenantSetting) {
+        if (! $tenantSetting) {
             return response()->json(['message' => 'Invalid Kiosk Token'], 401);
         }
 
@@ -109,12 +109,12 @@ class AttendanceController extends Controller
         ]);
 
         $kioskToken = $request->header('x-kiosk-token');
-        if (!$kioskToken) {
+        if (! $kioskToken) {
             return response()->json(['message' => 'Unauthorized Kiosk'], 401);
         }
 
         $tenantSetting = TenantSetting::where('key', 'kiosk_token')->where('value', $kioskToken)->first();
-        if (!$tenantSetting) {
+        if (! $tenantSetting) {
             return response()->json(['message' => 'Invalid Kiosk Token'], 401);
         }
 

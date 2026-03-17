@@ -18,7 +18,7 @@ class Plan extends Model
         'parent_monitoring_enabled',
         'notification_enabled',
         'features',
-        'is_active'
+        'is_active',
     ];
 
     protected $casts = [
@@ -28,7 +28,7 @@ class Plan extends Model
         'attendance_enabled' => 'boolean',
         'parent_monitoring_enabled' => 'boolean',
         'notification_enabled' => 'boolean',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
     ];
 
     public function subscriptions()

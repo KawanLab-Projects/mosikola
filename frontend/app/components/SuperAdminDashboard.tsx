@@ -1,9 +1,7 @@
 "use client"
 
+import { redirect } from "next/navigation"
+
 export default function SuperAdminDashboard() {
-    return (
-        <div>
-            <h1>Super Admin Dashboard</h1>
-        </div>
-    )
+    return redirect("/dashboard/superadmin")
 }

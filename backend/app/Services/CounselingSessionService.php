@@ -58,7 +58,7 @@ class CounselingSessionService
      */
     private function getAssignedClassroomIds($user)
     {
-        if (!$user->teacher || !$user->teacher->assignments) {
+        if (! $user->teacher || ! $user->teacher->assignments) {
             return [];
         }
 

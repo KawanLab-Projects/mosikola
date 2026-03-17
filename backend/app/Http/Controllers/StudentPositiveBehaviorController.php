@@ -10,7 +10,8 @@ class StudentPositiveBehaviorController extends Controller
     private function getTenantId(Request $request)
     {
         $tenantUser = $request->user()->tenantUsers()->where('is_active', true)->first();
-        abort_if(!$tenantUser, 403, 'Akses ditolak.');
+        abort_if(! $tenantUser, 403, 'Akses ditolak.');
+
         return $tenantUser->tenant_id;
     }
 
@@ -32,10 +33,10 @@ class StudentPositiveBehaviorController extends Controller
         $userId = $request->user()->id;
 
         $validated = $request->validate([
-            'student_id'           => 'required',
+            'student_id' => 'required',
             'positive_behavior_id' => 'required|exists:positive_behaviors,id',
-            'date'                 => 'required|date',
-            'notes'                => 'nullable|string',
+            'date' => 'required|date',
+            'notes' => 'nullable|string',
         ]);
 
         $studentQuery = \App\Models\Student::query();
@@ -46,7 +47,7 @@ class StudentPositiveBehaviorController extends Controller
         }
         $student = $studentQuery->first();
 
-        if (!$student) {
+        if (! $student) {
             return response()->json(['message' => 'Siswa tidak ditemukan.'], 404);
         }
 
@@ -55,19 +56,19 @@ class StudentPositiveBehaviorController extends Controller
         }
 
         $record = StudentPositiveBehavior::create([
-            'tenant_id'            => $tenantId,
-            'student_id'           => $student->id,
+            'tenant_id' => $tenantId,
+            'student_id' => $student->id,
             'positive_behavior_id' => $validated['positive_behavior_id'],
-            'date'                 => $validated['date'],
-            'notes'                => $validated['notes'] ?? null,
-            'recorded_by_user_id'  => $userId,
+            'date' => $validated['date'],
+            'notes' => $validated['notes'] ?? null,
+            'recorded_by_user_id' => $userId,
         ]);
 
         $record->load(['student', 'positiveBehavior', 'recordedBy']);
 
         return response()->json([
             'message' => 'Catatan perilaku positif berhasil disimpan.',
-            'data'    => $record
+            'data' => $record,
         ], 201);
     }
 
@@ -77,11 +78,11 @@ class StudentPositiveBehaviorController extends Controller
         $userId = $request->user()->id;
 
         $validated = $request->validate([
-            'student_ids'          => 'required|array|min:1',
-            'student_ids.*'        => 'required',
+            'student_ids' => 'required|array|min:1',
+            'student_ids.*' => 'required',
             'positive_behavior_id' => 'required|exists:positive_behaviors,id',
-            'date'                 => 'required|date',
-            'notes'                => 'nullable|string',
+            'date' => 'required|date',
+            'notes' => 'nullable|string',
         ]);
 
         $uuids = [];
@@ -95,8 +96,12 @@ class StudentPositiveBehaviorController extends Controller
         }
 
         $students = \App\Models\Student::where(function ($query) use ($uuids, $ids) {
-            if (count($uuids) > 0) $query->whereIn('public_id', $uuids);
-            if (count($ids) > 0) $query->orWhereIn('id', $ids);
+            if (count($uuids) > 0) {
+                $query->whereIn('public_id', $uuids);
+            }
+            if (count($ids) > 0) {
+                $query->orWhereIn('id', $ids);
+            }
         })->get();
 
         if ($students->isEmpty()) {
@@ -110,14 +115,14 @@ class StudentPositiveBehaviorController extends Controller
         foreach ($students as $student) {
             if ($student->tenant_id === $tenantId) {
                 $records[] = [
-                    'tenant_id'            => $tenantId,
-                    'student_id'           => $student->id,
+                    'tenant_id' => $tenantId,
+                    'student_id' => $student->id,
                     'positive_behavior_id' => $validated['positive_behavior_id'],
-                    'date'                 => $validated['date'],
-                    'notes'                => $validated['notes'] ?? null,
-                    'recorded_by_user_id'  => $userId,
-                    'created_at'           => $now,
-                    'updated_at'           => $now,
+                    'date' => $validated['date'],
+                    'notes' => $validated['notes'] ?? null,
+                    'recorded_by_user_id' => $userId,
+                    'created_at' => $now,
+                    'updated_at' => $now,
                 ];
                 $insertedCount++;
             }
@@ -125,6 +130,7 @@ class StudentPositiveBehaviorController extends Controller
 
         if ($insertedCount > 0) {
             StudentPositiveBehavior::insert($records);
+
             return response()->json(['message' => "Berhasil mencatat $insertedCount perilaku positif."], 201);
         }
 

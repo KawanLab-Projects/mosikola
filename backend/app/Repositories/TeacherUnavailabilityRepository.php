@@ -28,15 +28,15 @@ class TeacherUnavailabilityRepository
             ->where('academic_year_id', $academicYearId)
             ->delete();
 
-        if (!empty($slots)) {
-            $rows = array_map(fn($slot) => [
-                'tenant_id'       => $tenantId,
-                'teacher_id'      => $teacherId,
+        if (! empty($slots)) {
+            $rows = array_map(fn ($slot) => [
+                'tenant_id' => $tenantId,
+                'teacher_id' => $teacherId,
                 'academic_year_id' => $academicYearId,
-                'day_of_week'     => $slot['day_of_week'],
-                'period_number'   => $slot['period_number'],
-                'created_at'      => now(),
-                'updated_at'      => now(),
+                'day_of_week' => $slot['day_of_week'],
+                'period_number' => $slot['period_number'],
+                'created_at' => now(),
+                'updated_at' => now(),
             ], $slots);
             TeacherUnavailability::insert($rows);
         }

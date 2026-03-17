@@ -22,15 +22,15 @@ class SchoolPeriodService
             return;
         }
 
-        $rows = array_map(fn($p) => [
-            'tenant_id'     => $tenantId,
+        $rows = array_map(fn ($p) => [
+            'tenant_id' => $tenantId,
             'period_number' => $p['period_number'],
-            'start_time'    => $p['start_time'],
-            'end_time'      => $p['end_time'],
-            'is_break'      => $p['is_break'] ?? false,
-            'label'         => $p['label'] ?? null,
-            'created_at'    => now(),
-            'updated_at'    => now(),
+            'start_time' => $p['start_time'],
+            'end_time' => $p['end_time'],
+            'is_break' => $p['is_break'] ?? false,
+            'label' => $p['label'] ?? null,
+            'created_at' => now(),
+            'updated_at' => now(),
         ], $periods);
 
         $this->repo->bulkInsert($rows);

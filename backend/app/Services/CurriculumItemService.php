@@ -22,12 +22,12 @@ class CurriculumItemService
     public function create(int $tenantId, int $academicYearId, array $data): array
     {
         $item = $this->repo->create([
-            'tenant_id'       => $tenantId,
+            'tenant_id' => $tenantId,
             'academic_year_id' => $academicYearId,
-            'classroom_id'    => $data['classroom_id'],
-            'subject_id'      => $data['subject_id'],
-            'teacher_id'      => $data['teacher_id'],
-            'hours_per_week'  => $data['hours_per_week'],
+            'classroom_id' => $data['classroom_id'],
+            'subject_id' => $data['subject_id'],
+            'teacher_id' => $data['teacher_id'],
+            'hours_per_week' => $data['hours_per_week'],
         ]);
 
         return $item->load(['classroom', 'subject', 'teacher'])->toArray();
@@ -36,7 +36,7 @@ class CurriculumItemService
     public function update(int $id, array $data): bool
     {
         return $this->repo->update($id, [
-            'teacher_id'     => $data['teacher_id'],
+            'teacher_id' => $data['teacher_id'],
             'hours_per_week' => $data['hours_per_week'],
         ]);
     }
@@ -63,19 +63,19 @@ class CurriculumItemService
                     && $item->teacher_id === $sourceItem->teacher_id;
             });
 
-            if (!$exists) {
+            if (! $exists) {
                 // If subject exists but different teacher, we also don't insert to avoid duplicate subjects?
                 // For simplicity, let's just make sure the subject isn't already assigned at all in the target class
                 $subjectExists = $targetItems->contains('subject_id', $sourceItem->subject_id);
 
-                if (!$subjectExists) {
+                if (! $subjectExists) {
                     $this->repo->create([
-                        'tenant_id'       => $tenantId,
+                        'tenant_id' => $tenantId,
                         'academic_year_id' => $academicYearId,
-                        'classroom_id'    => $targetClassroomId,
-                        'subject_id'      => $sourceItem->subject_id,
-                        'teacher_id'      => $sourceItem->teacher_id,
-                        'hours_per_week'  => $sourceItem->hours_per_week,
+                        'classroom_id' => $targetClassroomId,
+                        'subject_id' => $sourceItem->subject_id,
+                        'teacher_id' => $sourceItem->teacher_id,
+                        'hours_per_week' => $sourceItem->hours_per_week,
                     ]);
                     $copiedCount++;
                 }

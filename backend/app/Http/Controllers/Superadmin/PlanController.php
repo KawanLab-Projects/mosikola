@@ -14,6 +14,7 @@ class PlanController extends Controller
     public function index()
     {
         $plans = Plan::all();
+
         return response()->json(['data' => $plans]);
     }
 
@@ -48,6 +49,7 @@ class PlanController extends Controller
     public function show(string $id)
     {
         $plan = Plan::findOrFail($id);
+
         return response()->json(['data' => $plan]);
     }
 
@@ -60,7 +62,7 @@ class PlanController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'code' => 'sometimes|required|string|unique:plans,code,' . $id,
+            'code' => 'sometimes|required|string|unique:plans,code,'.$id,
             'student_limit' => 'nullable|integer',
             'teacher_limit' => 'nullable|integer',
             'price' => 'sometimes|numeric|min:0',

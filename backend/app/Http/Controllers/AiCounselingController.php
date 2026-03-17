@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Student;
 use App\Models\GlobalSetting;
+use App\Models\Student;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class AiCounselingController extends Controller
@@ -19,7 +19,7 @@ class AiCounselingController extends Controller
         $tenantUser = $user->tenantUsers()->where('is_active', true)->with('tenant.activeSubscription.plan')->first();
         $plan = $tenantUser?->tenant?->activeSubscription?->plan;
 
-        if (!$plan || !($plan->features['ai_counseling'] ?? false)) {
+        if (! $plan || ! ($plan->features['ai_counseling'] ?? false)) {
             return response()->json(['message' => 'Sekolah Anda belum mengaktifkan fitur AI Helper Bimbingan Konseling.'], 403);
         }
 
@@ -31,16 +31,16 @@ class AiCounselingController extends Controller
         }
         $student = $studentQuery->first();
 
-        if (!$student) {
+        if (! $student) {
             return response()->json(['message' => 'Siswa tidak ditemukan.'], 404);
         }
 
         // Gather student context
-        $violationsText = "";
+        $violationsText = '';
         if ($student->studentViolations && $student->studentViolations->count() > 0) {
             foreach ($student->studentViolations as $violation) {
                 // Ensure date formatting handles missing/invalid gracefully
-                $dateStr = "-";
+                $dateStr = '-';
                 if (isset($violation->date)) {
                     $dateStr = \Carbon\Carbon::parse($violation->date)->format('d-m-Y');
                 }
@@ -57,18 +57,18 @@ class AiCounselingController extends Controller
         $apiKey = $dbSettings['ai_api_key'] ?? env('GEMINI_API_KEY');
         $model = $dbSettings['ai_model'] ?? 'gemini-2.5-flash';
 
-        if (!$apiKey) {
+        if (! $apiKey) {
             return response()->json([
-                'message' => 'API Key LLM belum diatur di Pengaturan Sistem maupun di environment variables backend.'
+                'message' => 'API Key LLM belum diatur di Pengaturan Sistem maupun di environment variables backend.',
             ], 500);
         }
 
-        $prompt = "Tindaklanjuti data sisa berikut sebagai seorang Guru Bimbingan Konseling profesional. Berikan respon Anda dalam format Markdown.\n\n" .
-            "Nama Siswa: {$student->name}\n\n" .
-            "Daftar Pelanggaran Terakhir:\n{$violationsText}\n\n" .
-            "Saya membutuhkan Anda untuk memberikan:\n" .
-            "1. **Analisis Psikologis Singkat:** Analisa potensi alasan atau motivasi di balik perilaku siswa ini dari sudut pandang perkembangan dan psikologi remaja.\n" .
-            "2. **Rekomendasi Tindakan / Actionable Advice:** Berikan 3-5 saran konkret, praktis, dan dapat segera dilakukan oleh Guru atau Wali Kelas untuk membantu siswa ini (misalnya cara pendekatan spesifik atau intervensi).";
+        $prompt = "Tindaklanjuti data sisa berikut sebagai seorang Guru Bimbingan Konseling profesional. Berikan respon Anda dalam format Markdown.\n\n".
+            "Nama Siswa: {$student->name}\n\n".
+            "Daftar Pelanggaran Terakhir:\n{$violationsText}\n\n".
+            "Saya membutuhkan Anda untuk memberikan:\n".
+            "1. **Analisis Psikologis Singkat:** Analisa potensi alasan atau motivasi di balik perilaku siswa ini dari sudut pandang perkembangan dan psikologi remaja.\n".
+            '2. **Rekomendasi Tindakan / Actionable Advice:** Berikan 3-5 saran konkret, praktis, dan dapat segera dilakukan oleh Guru atau Wali Kelas untuk membantu siswa ini (misalnya cara pendekatan spesifik atau intervensi).';
 
         try {
             if ($provider === 'gemini') {
@@ -79,13 +79,13 @@ class AiCounselingController extends Controller
                     'contents' => [
                         [
                             'parts' => [
-                                ['text' => $prompt]
-                            ]
-                        ]
+                                ['text' => $prompt],
+                            ],
+                        ],
                     ],
                     'generationConfig' => [
                         'temperature' => 0.7,
-                    ]
+                    ],
                 ]);
 
                 if ($response->successful()) {
@@ -93,31 +93,32 @@ class AiCounselingController extends Controller
 
                     if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
                         $recommendation = $data['candidates'][0]['content']['parts'][0]['text'];
+
                         return response()->json([
                             'data' => [
                                 'student_name' => $student->name,
-                                'recommendation' => $recommendation
-                            ]
+                                'recommendation' => $recommendation,
+                            ],
                         ]);
                     }
                 }
 
-                \Illuminate\Support\Facades\Log::error('Gemini API Error: ' . $response->body());
+                \Illuminate\Support\Facades\Log::error('Gemini API Error: '.$response->body());
             } elseif ($provider === 'openai') {
                 $response = Http::withoutVerifying()->timeout(30)->withHeaders([
-                    'Authorization' => 'Bearer ' . $apiKey,
+                    'Authorization' => 'Bearer '.$apiKey,
                     'Content-Type' => 'application/json',
                 ])->post('https://api.openai.com/v1/chat/completions', [
                     'model' => $model,
                     'messages' => [
                         [
                             'role' => 'system',
-                            'content' => 'Anda adalah seorang Guru Bimbingan Konseling profesional yang berpengalaman dalam menangani masalah kedisiplinan siswa dengan pendekatan psikologis.'
+                            'content' => 'Anda adalah seorang Guru Bimbingan Konseling profesional yang berpengalaman dalam menangani masalah kedisiplinan siswa dengan pendekatan psikologis.',
                         ],
                         [
                             'role' => 'user',
-                            'content' => $prompt
-                        ]
+                            'content' => $prompt,
+                        ],
                     ],
                     'temperature' => 0.7,
                 ]);
@@ -126,26 +127,27 @@ class AiCounselingController extends Controller
                     $jsonResponse = $response->json();
                     if (isset($jsonResponse['choices'][0]['message']['content'])) {
                         $recommendation = $jsonResponse['choices'][0]['message']['content'];
+
                         return response()->json([
                             'data' => [
                                 'student_name' => $student->name,
-                                'recommendation' => $recommendation
-                            ]
+                                'recommendation' => $recommendation,
+                            ],
                         ]);
                     }
                 }
 
-                \Illuminate\Support\Facades\Log::error('OpenAI API Error: ' . $response->body());
+                \Illuminate\Support\Facades\Log::error('OpenAI API Error: '.$response->body());
             }
 
             return response()->json([
                 'message' => 'Gagal mendapatkan respon yang valid dari AI Provider.',
-                'details' => isset($response) ? $response->json() : 'Provider tidak didukung.'
+                'details' => isset($response) ? $response->json() : 'Provider tidak didukung.',
             ], 500);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Terjadi kesalahan saat menghubungi API AI Provider.',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

@@ -2,9 +2,9 @@
 
 namespace App\Imports;
 
-use App\Services\StudentService;
-use App\Models\Tenant;
 use App\Models\Student;
+use App\Models\Tenant;
+use App\Services\StudentService;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Row;
@@ -12,7 +12,9 @@ use Maatwebsite\Excel\Row;
 class StudentImport implements OnEachRow, WithHeadingRow
 {
     private ?int $limit = null;
+
     private int $currentCount = 0;
+
     private int $importedCount = 0;
 
     public function __construct(
@@ -40,15 +42,15 @@ class StudentImport implements OnEachRow, WithHeadingRow
         }
 
         $this->studentService->createWithUser([
-            'nisn'         => $row['nisn'],
-            'name'         => $row['name'],
-            'address'      => $row['address'] ?? null,
-            'birth_place'  => $row['birth_place'] ?? null,
-            'birth_date'   => $row['birth_date'] ?? null,
-            'parent_name'  => $row['parent_name'] ?? null,
+            'nisn' => $row['nisn'],
+            'name' => $row['name'],
+            'address' => $row['address'] ?? null,
+            'birth_place' => $row['birth_place'] ?? null,
+            'birth_date' => $row['birth_date'] ?? null,
+            'parent_name' => $row['parent_name'] ?? null,
             'parent_phone' => $row['parent_phone'] ?? null,
             'classroom_id' => $this->classroomId,
-            'tenant_id'    => $this->tenantId,
+            'tenant_id' => $this->tenantId,
         ]);
 
         $this->importedCount++;

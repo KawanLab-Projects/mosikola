@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Tenant;
-use App\Models\User;
 use App\Models\Subscription;
+use App\Models\Tenant;
 use App\Models\TenantRegistration;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class SuperadminDashboardController extends Controller
@@ -25,11 +25,13 @@ class SuperadminDashboardController extends Controller
             ->where('end_date', '>=', now())
             ->count();
 
+        $pendingRegistrations = TenantRegistration::where('status', 'pending')->count();
+
         // 2. Growth Chart Data (Schools onboarded per month for the last 6 months)
         $sixMonthsAgo = Carbon::now()->subMonths(5)->startOfMonth();
 
         // This query works for both MySQL and modern tools depending on DB.
-        // In Laravel, we can just fetch and group in memory if the dataset is small, 
+        // In Laravel, we can just fetch and group in memory if the dataset is small,
         // to be safe across different database drivers (SQLite vs MySQL)
 
         $tenantsRecent = Tenant::where('created_at', '>=', $sixMonthsAgo)
@@ -46,7 +48,7 @@ class SuperadminDashboardController extends Controller
 
             $growthData[] = [
                 'name' => $monthLabel,
-                'schools' => isset($tenantsRecent[$monthString]) ? $tenantsRecent[$monthString]->count() : 0
+                'schools' => isset($tenantsRecent[$monthString]) ? $tenantsRecent[$monthString]->count() : 0,
             ];
         }
 
@@ -57,12 +59,12 @@ class SuperadminDashboardController extends Controller
         // Recent Tenants Onboarded
         $recentTenants = Tenant::orderBy('created_at', 'desc')->take(5)->get()->map(function ($tenant) {
             return [
-                'id' => 'tenant_' . $tenant->id,
+                'id' => 'tenant_'.$tenant->id,
                 'type' => 'new_school',
                 'title' => 'New School Registered',
-                'description' => $tenant->name . ' has joined Mosikola.',
+                'description' => $tenant->name.' has joined Mosikola.',
                 'date' => $tenant->created_at->toISOString(),
-                'status' => 'success'
+                'status' => 'success',
             ];
         });
         $recentActivities = $recentActivities->concat($recentTenants);
@@ -70,12 +72,12 @@ class SuperadminDashboardController extends Controller
         // Recent Registrations (Pending)
         $recentRegistrations = TenantRegistration::orderBy('created_at', 'desc')->take(5)->get()->map(function ($reg) {
             return [
-                'id' => 'reg_' . $reg->id,
+                'id' => 'reg_'.$reg->id,
                 'type' => 'registration',
                 'title' => 'New Registration Request',
-                'description' => $reg->school_name . ' is requesting to join.',
+                'description' => $reg->school_name.' is requesting to join.',
                 'date' => $reg->created_at->toISOString(),
-                'status' => $reg->status // pending, approved, rejected
+                'status' => $reg->status, // pending, approved, rejected
             ];
         });
         $recentActivities = $recentActivities->concat($recentRegistrations);
@@ -89,6 +91,7 @@ class SuperadminDashboardController extends Controller
                 'active_tenants' => $activeTenants,
                 'total_users' => $totalUsers,
                 'active_subscriptions' => $activeSubscriptions,
+                'pending_registrations' => $pendingRegistrations,
             ],
             'growth_chart' => $growthData,
             'recent_activity' => $recentActivities,

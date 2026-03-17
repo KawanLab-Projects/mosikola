@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
@@ -12,9 +12,9 @@ Route::get('/', function () {
 // This is critical for `php artisan serve` which ignores .htaccess
 Route::get('/storage/{path}', function ($path) {
     // Basic verification
-    $filePath = storage_path('app/public/' . $path);
+    $filePath = storage_path('app/public/'.$path);
 
-    if (!File::exists($filePath)) {
+    if (! File::exists($filePath)) {
         abort(404);
     }
 
@@ -22,7 +22,7 @@ Route::get('/storage/{path}', function ($path) {
     $type = File::mimeType($filePath);
 
     $response = Response::make($file, 200);
-    $response->header("Content-Type", $type);
+    $response->header('Content-Type', $type);
 
     // Explicit CORS headers
     $response->header('Access-Control-Allow-Origin', '*');

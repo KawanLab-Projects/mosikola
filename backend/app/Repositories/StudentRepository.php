@@ -9,14 +9,23 @@ use Illuminate\Support\Collection;
 interface StudentRepoInterface
 {
     public function create(array $data): Student;
+
     public function getByClassroomId(int $classroomId): ?Collection;
+
     public function getById(int $id): ?Student;
+
     public function getByPublicId(string $public_id): ?Student;
+
     public function getByUserId(int $user_id): ?Student;
+
     public function getByParentPhone(string $parentPhone): Collection;
+
     public function countByTenantId(int $tenantId): int;
+
     public function getByTenantId(int $tenantId): Collection;
+
     public function update(Student $student, array $data): Student;
+
     public function delete(Student $student): void;
 }
 
@@ -69,6 +78,7 @@ class StudentRepository implements StudentRepoInterface
         $user->save();
 
         $student->update($data);
+
         return $student;
     }
 

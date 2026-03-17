@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import AdminDashboard from "../components/AdminDashboard"
-import SuperAdminDashboard from "../components/SuperAdminDashboard"
+import SuperAdminDashboard from "../dashboard/superadmin/page"
 import TeacherDashboard from "../components/TeacherDashboard"
 
 

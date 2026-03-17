@@ -16,7 +16,9 @@ interface StudyProgramRepoInterface
     public function getById(int $id): ?StudyProgram;
 
     public function create(array $data): StudyProgram;
+
     public function createMany(array $data): void;
+
     public function update(int $id, array $data): bool;
 
     public function delete(int $id): bool;

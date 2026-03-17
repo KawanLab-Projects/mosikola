@@ -10,29 +10,29 @@ class TenantSettingService
     // All valid groups, keys, and their default values
     public const SCHEMA = [
         'school' => [
-            'principal_name'  => '',
-            'principal_nip'   => '',
+            'principal_name' => '',
+            'principal_nip' => '',
             'school_logo_url' => '',
-            'school_address'  => '',
+            'school_address' => '',
         ],
         'schedule' => [
-            'active_days'       => '1,2,3,4,5',
-            'active_semester'   => 'ganjil',
-            'holidays'                       => '',
+            'active_days' => '1,2,3,4,5',
+            'active_semester' => 'ganjil',
+            'holidays' => '',
             'default_period_duration_minutes' => '45',
-            'shortened_period_days'           => '',
+            'shortened_period_days' => '',
         ],
         'attendance' => [
-            'school_start_time'                 => '07:00',
-            'school_end_time'                   => '14:00',
-            'tolerance_late_minutes'            => '15',
-            'token_ttl_minutes'                 => '30',
-            'absent_mode'                       => 'token',
-            'kiosk_token'                       => '',
-            'kiosk_inactivity_timeout_minutes'  => '20',
+            'school_start_time' => '07:00',
+            'school_end_time' => '14:00',
+            'tolerance_late_minutes' => '15',
+            'token_ttl_minutes' => '30',
+            'absent_mode' => 'token',
+            'kiosk_token' => '',
+            'kiosk_inactivity_timeout_minutes' => '20',
         ],
         'discipline' => [
-            'notify_threshold'   => '3',
+            'notify_threshold' => '3',
             'parent_notify_mode' => 'none',
             'points_validity' => 'academic_year',
             'action_threshold_sp1' => '25',
@@ -41,7 +41,7 @@ class TenantSettingService
             'action_threshold_suspension' => '100',
         ],
         'notify' => [
-            'whatsapp_enabled'      => 'false',
+            'whatsapp_enabled' => 'false',
             'whatsapp_admin_number' => '',
         ],
     ];
@@ -56,7 +56,7 @@ class TenantSettingService
     {
         $saved = $this->repo->getAllByTenant($tenantId)
             ->groupBy('group')
-            ->map(fn(Collection $items) => $items->pluck('value', 'key'));
+            ->map(fn (Collection $items) => $items->pluck('value', 'key'));
 
         $result = [];
         foreach (self::SCHEMA as $group => $defaults) {
@@ -66,8 +66,10 @@ class TenantSettingService
                     if (str_starts_with($value, 'storage/')) {
                         return asset($value);
                     }
+
                     return \Illuminate\Support\Facades\Storage::disk('s3')->url($value);
                 }
+
                 return $value;
             });
         }
@@ -83,9 +85,9 @@ class TenantSettingService
     {
         foreach ($items as $item) {
             $group = $item['group'];
-            $key   = $item['key'];
+            $key = $item['key'];
 
-            if (!array_key_exists($key, self::SCHEMA[$group] ?? [])) {
+            if (! array_key_exists($key, self::SCHEMA[$group] ?? [])) {
                 continue; // silently ignore unknown keys
             }
 

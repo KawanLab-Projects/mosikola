@@ -12,14 +12,14 @@ class AcademicYear extends Model
         'start_date',
         'end_date',
         'is_active',
-        'is_schedule_locked'
+        'is_schedule_locked',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
         'is_active' => 'boolean',
-        'is_schedule_locked' => 'boolean'
+        'is_schedule_locked' => 'boolean',
     ];
 
     public function tenant()

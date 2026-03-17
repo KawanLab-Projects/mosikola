@@ -18,8 +18,8 @@ class ClassroomService
     {
         $studyProgram = $this->studyProgramRepo->getByPublicId($studyProgramPublicId);
 
-        if (!$studyProgram) {
-            throw new ModelNotFoundException("study program not found");
+        if (! $studyProgram) {
+            throw new ModelNotFoundException('study program not found');
         }
 
         return $this->classroomRepo->getAllByStudyProgram($studyProgram->id);
@@ -50,30 +50,30 @@ class ClassroomService
     {
         $studyProgramId = null;
 
-        if (!empty($data['study_program_public_id'])) {
+        if (! empty($data['study_program_public_id'])) {
             $studyProgram = $this->studyProgramRepo->getByPublicId($data['study_program_public_id']);
-            if (!$studyProgram) {
-                throw new ModelNotFoundException("study program not found");
+            if (! $studyProgram) {
+                throw new ModelNotFoundException('study program not found');
             }
             $studyProgramId = $studyProgram->id;
         }
 
         return $this->classroomRepo->create([
-            'name'             => $data['name'],
-            'short'            => $data['short'],
-            'grade_level'      => $data['grade_level'],
+            'name' => $data['name'],
+            'short' => $data['short'],
+            'grade_level' => $data['grade_level'],
             'study_program_id' => $studyProgramId,
-            'tenant_id'        => $data['tenant_id'] ?? null,
+            'tenant_id' => $data['tenant_id'] ?? null,
         ]);
     }
 
     public function update(int $id, array $data)
     {
         if (array_key_exists('study_program_public_id', $data)) {
-            if (!empty($data['study_program_public_id'])) {
+            if (! empty($data['study_program_public_id'])) {
                 $studyProgram = $this->studyProgramRepo->getByPublicId($data['study_program_public_id']);
-                if (!$studyProgram) {
-                    throw new ModelNotFoundException("Study program not found");
+                if (! $studyProgram) {
+                    throw new ModelNotFoundException('Study program not found');
                 }
                 $data['study_program_id'] = $studyProgram->id;
             } else {

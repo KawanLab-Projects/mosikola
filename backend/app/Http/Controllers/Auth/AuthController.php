@@ -22,21 +22,20 @@ class AuthController extends Controller
 
         $user = User::where($login_type, $request->input('user'))->first();
 
-
-        if (!$user || !Hash::check($validated['password'], $user->password)) {
+        if (! $user || ! Hash::check($validated['password'], $user->password)) {
             return response()->json([
                 'status' => false,
-                'message' => "Username or Password invalid"
+                'message' => 'Username or Password invalid',
             ], 401);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
         $userData = [
-            'id'    => $user->id,
-            'name'  => $user->name,
+            'id' => $user->id,
+            'name' => $user->name,
             'email' => $user->email,
-            'role'  => $user->getRoleNames()
+            'role' => $user->getRoleNames(),
         ];
 
         // Attach school_type so the frontend can adapt menus per school level
@@ -53,10 +52,10 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'status'  => true,
+            'status' => true,
             'message' => 'Login Success',
-            'token'   => $token,
-            'user'    => $userData,
+            'token' => $token,
+            'user' => $userData,
         ]);
     }
 
@@ -66,7 +65,7 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'Logged Out'
+            'message' => 'Logged Out',
         ]);
     }
 
@@ -74,16 +73,16 @@ class AuthController extends Controller
     {
         $user = $request->user()->currentAccessToken();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'status' => false,
-                'message' => 'Invalid Token'
+                'message' => 'Invalid Token',
             ], 401);
         }
 
         return response()->json([
             'status' => true,
-            'message' => 'Valid Token'
+            'message' => 'Valid Token',
         ]);
     }
 }

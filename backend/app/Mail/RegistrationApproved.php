@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -39,7 +38,7 @@ class RegistrationApproved extends Mailable
         return new Content(
             markdown: 'emails.registration.approved',
             with: [
-                'loginUrl' => config('app.frontend_url', 'http://localhost:3000') . '/auth/login',
+                'loginUrl' => config('app.frontend_url', 'http://localhost:3000').'/auth/login',
             ],
         );
     }

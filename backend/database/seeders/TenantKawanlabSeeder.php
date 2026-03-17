@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 use App\Models\Tenant;
 use App\Models\TenantUser;
+use App\Models\User;
 use App\Services\SubscriptionService;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class TenantKawanlabSeeder extends Seeder
 {
@@ -19,8 +19,8 @@ class TenantKawanlabSeeder extends Seeder
     {
         // 1. Create admin user
         $user = User::create([
-            'name'     => 'Mohamad Latief Mohi, S.Kom',
-            'email'    => 'admin@kawanlab.com',
+            'name' => 'Mohamad Latief Mohi, S.Kom',
+            'email' => 'admin@kawanlab.com',
             'password' => 'password', // Auto-hashed by User model depending on setup, but typically models do it. Or we can use bcrypt just in case.
         ]);
 
@@ -34,21 +34,21 @@ class TenantKawanlabSeeder extends Seeder
 
         // 2. Create tenant
         $tenant = Tenant::create([
-            'public_id'     => (string) Str::uuid(),
-            'name'          => 'SMK AKADEMI KAWANLAB',
-            'slug'          => 'smk-akademi-kawanlab',
-            'school_type'   => 'SMK',
-            'email'         => 'admin@kawanlab.com',
-            'phone'         => '081234567890', // Default dummy phone
-            'is_active'     => true,
+            'public_id' => (string) Str::uuid(),
+            'name' => 'SMK AKADEMI KAWANLAB',
+            'slug' => 'smk-akademi-kawanlab',
+            'school_type' => 'SMK',
+            'email' => 'admin@kawanlab.com',
+            'phone' => '081234567890', // Default dummy phone
+            'is_active' => true,
         ]);
 
         // 3. Link user to tenant
         TenantUser::create([
-            'tenant_id'     => $tenant->id,
-            'user_id'       => $user->id,
-            'role'          => 'admin',
-            'is_active'     => true,
+            'tenant_id' => $tenant->id,
+            'user_id' => $user->id,
+            'role' => 'admin',
+            'is_active' => true,
         ]);
 
         // 4. Assign default Perintis plan

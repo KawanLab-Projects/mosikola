@@ -35,13 +35,13 @@ class AcademicYearController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'       => 'required|string|max:20',
+            'name' => 'required|string|max:20',
             'start_date' => 'required|date',
-            'end_date'   => 'required|date|after:start_date',
+            'end_date' => 'required|date|after:start_date',
         ]);
 
         $tenant = $this->resolveTenant($request);
-        $year   = $this->service->create($tenant->id, $request->only(['name', 'start_date', 'end_date']));
+        $year = $this->service->create($tenant->id, $request->only(['name', 'start_date', 'end_date']));
 
         return response()->json(['data' => $year, 'message' => 'Tahun ajaran berhasil dibuat.'], 201);
     }
@@ -50,7 +50,7 @@ class AcademicYearController extends Controller
     public function activate(Request $request, int $id)
     {
         $tenant = $this->resolveTenant($request);
-        $year   = $this->service->activate($id, $tenant->id);
+        $year = $this->service->activate($id, $tenant->id);
 
         return response()->json(['data' => $year, 'message' => 'Tahun ajaran berhasil diaktifkan.']);
     }
@@ -59,9 +59,9 @@ class AcademicYearController extends Controller
     public function close(Request $request, int $id)
     {
         $tenant = $this->resolveTenant($request);
-        $year   = $this->service->getActive($tenant->id);
+        $year = $this->service->getActive($tenant->id);
 
-        if (!$year || $year->id !== $id) {
+        if (! $year || $year->id !== $id) {
             return response()->json(['message' => 'Tahun ajaran aktif tidak cocok.'], 422);
         }
 
@@ -76,26 +76,27 @@ class AcademicYearController extends Controller
         $tenant = $this->resolveTenant($request);
         $year = \App\Models\AcademicYear::where('tenant_id', $tenant->id)->findOrFail($id);
 
-        $year->is_schedule_locked = !$year->is_schedule_locked;
+        $year->is_schedule_locked = ! $year->is_schedule_locked;
         $year->save();
 
         return response()->json([
             'message' => $year->is_schedule_locked
                 ? 'Jadwal berhasil dikunci. Fitur reset jadwal dinonaktifkan.'
                 : 'Kunci jadwal dibuka. Fitur reset jadwal diaktifkan kembali.',
-            'data' => $year
+            'data' => $year,
         ]);
     }
 
-    /** POST /students/{student}/demote */    public function demoteStudent(Request $request, string $studentPublicId)
+    /** POST /students/{student}/demote */
+    public function demoteStudent(Request $request, string $studentPublicId)
     {
         $request->validate([
-            'classroom_public_id'  => 'required|string|exists:classrooms,public_id',
-            'academic_year_id'     => 'required|integer|exists:academic_years,id',
+            'classroom_public_id' => 'required|string|exists:classrooms,public_id',
+            'academic_year_id' => 'required|integer|exists:academic_years,id',
         ]);
 
-        $student    = Student::where('public_id', $studentPublicId)->firstOrFail();
-        $classroom  = Classroom::where('public_id', $request->classroom_public_id)->firstOrFail();
+        $student = Student::where('public_id', $studentPublicId)->firstOrFail();
+        $classroom = Classroom::where('public_id', $request->classroom_public_id)->firstOrFail();
 
         $this->service->demoteStudent($student, $classroom, $request->academic_year_id, $request->user()->id);
 
@@ -117,7 +118,7 @@ class AcademicYearController extends Controller
     {
         $tenantUser = $request->user()->tenantUsers()->where('is_active', true)->with('tenant')->first();
 
-        abort_if(!$tenantUser, 403, 'Akses ditolak.');
+        abort_if(! $tenantUser, 403, 'Akses ditolak.');
 
         return $tenantUser->tenant;
     }

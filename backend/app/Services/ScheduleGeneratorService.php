@@ -25,8 +25,8 @@ class ScheduleGeneratorService
     {
         set_time_limit(300);
 
-        $periods       = $this->periodRepo->getByTenant($tenantId)->sortBy('period_number');
-        $items         = $this->curriculumRepo->getForGenerator($tenantId, $academicYearId);
+        $periods = $this->periodRepo->getByTenant($tenantId)->sortBy('period_number');
+        $items = $this->curriculumRepo->getForGenerator($tenantId, $academicYearId);
         $unavailGroups = $this->unavailRepo->getByYearGrouped($tenantId, $academicYearId);
 
         $activePeriods = $periods->where('is_break', false)->pluck('period_number')->values()->toArray();
@@ -44,51 +44,51 @@ class ScheduleGeneratorService
         // Expand curriculum items into individual session tasks, sort most-constrained first
         $tasks = $this->expandAndSort($items, $unavailGroups, $activePeriods);
 
-        $assigned   = [];
+        $assigned = [];
         $unresolved = [];
-        $now        = now()->toDateTimeString();
+        $now = now()->toDateTimeString();
 
         foreach ($tasks as $task) {
             $placed = false;
 
             foreach (range(1, 5) as $day) {
                 foreach ($activePeriods as $periodNum) {
-                    if (!$this->isSlotValid($task, $day, $periodNum, $teacherSlots, $classroomSlots, $unavailGroups)) {
+                    if (! $this->isSlotValid($task, $day, $periodNum, $teacherSlots, $classroomSlots, $unavailGroups)) {
                         continue;
                     }
 
                     $periodData = $periods->firstWhere('period_number', $periodNum);
 
                     $assigned[] = [
-                        'tenant_id'        => $tenantId,
+                        'tenant_id' => $tenantId,
                         'academic_year_id' => $academicYearId,
-                        'classroom_id'     => $task['classroom_id'],
-                        'subject_id'       => $task['subject_id'],
-                        'teacher_id'       => $task['teacher_id'],
-                        'classroom'        => $task['classroom_name'],
-                        'subject'          => $task['subject_name'],
-                        'teacher'          => $task['teacher_name'],
-                        'day_of_week'      => $day,
-                        'period_start'     => $periodNum,
-                        'period_end'       => $periodNum,
-                        'start_time'       => $periodData->start_time,
-                        'end_time'         => $periodData->end_time,
-                        'created_at'       => $now,
-                        'updated_at'       => $now,
+                        'classroom_id' => $task['classroom_id'],
+                        'subject_id' => $task['subject_id'],
+                        'teacher_id' => $task['teacher_id'],
+                        'classroom' => $task['classroom_name'],
+                        'subject' => $task['subject_name'],
+                        'teacher' => $task['teacher_name'],
+                        'day_of_week' => $day,
+                        'period_start' => $periodNum,
+                        'period_end' => $periodNum,
+                        'start_time' => $periodData->start_time,
+                        'end_time' => $periodData->end_time,
+                        'created_at' => $now,
+                        'updated_at' => $now,
                     ];
 
-                    $teacherSlots[$task['teacher_id']][$day][$periodNum]     = true;
+                    $teacherSlots[$task['teacher_id']][$day][$periodNum] = true;
                     $classroomSlots[$task['classroom_id']][$day][$periodNum] = true;
                     $placed = true;
                     break 2;
                 }
             }
 
-            if (!$placed) {
+            if (! $placed) {
                 $unresolved[] = [
                     'classroom' => $task['classroom_name'],
-                    'subject'   => $task['subject_name'],
-                    'teacher'   => $task['teacher_name'],
+                    'subject' => $task['subject_name'],
+                    'teacher' => $task['teacher_name'],
                 ];
             }
         }
@@ -99,9 +99,7 @@ class ScheduleGeneratorService
     /**
      * Expand items to individual session tasks and sort most-constrained (fewest available slots) first.
      *
-     * @param Collection $items
-     * @param Collection $unavailGroups
-     * @param int[] $activePeriods
+     * @param  int[]  $activePeriods
      * @return array<int, array<string, mixed>>
      */
     private function expandAndSort(Collection $items, Collection $unavailGroups, array $activePeriods): array
@@ -111,22 +109,22 @@ class ScheduleGeneratorService
 
         foreach ($items as $item) {
             $teacherUnavailCount = ($unavailGroups[$item->teacher_id] ?? collect())->count();
-            $availableSlots      = $totalSlots - $teacherUnavailCount;
+            $availableSlots = $totalSlots - $teacherUnavailCount;
 
             for ($i = 0; $i < $item->hours_per_week; $i++) {
                 $tasks[] = [
-                    'classroom_id'   => $item->classroom_id,
-                    'subject_id'     => $item->subject_id,
-                    'teacher_id'     => $item->teacher_id,
+                    'classroom_id' => $item->classroom_id,
+                    'subject_id' => $item->subject_id,
+                    'teacher_id' => $item->teacher_id,
                     'classroom_name' => $item->classroom->name ?? '',
-                    'subject_name'   => $item->subject->name ?? '',
-                    'teacher_name'   => $item->teacher->name ?? '',
+                    'subject_name' => $item->subject->name ?? '',
+                    'teacher_name' => $item->teacher->name ?? '',
                     'available_slots' => $availableSlots,
                 ];
             }
         }
 
-        usort($tasks, fn($a, $b) => $a['available_slots'] <=> $b['available_slots']);
+        usort($tasks, fn ($a, $b) => $a['available_slots'] <=> $b['available_slots']);
 
         return $tasks;
     }
@@ -134,10 +132,9 @@ class ScheduleGeneratorService
     /**
      * Check all hard constraints for a given slot.
      *
-     * @param array<string, mixed> $task
-     * @param array<int, array<int, array<int, bool>>> $teacherSlots
-     * @param array<int, array<int, array<int, bool>>> $classroomSlots
-     * @param Collection $unavailGroups
+     * @param  array<string, mixed>  $task
+     * @param  array<int, array<int, array<int, bool>>>  $teacherSlots
+     * @param  array<int, array<int, array<int, bool>>>  $classroomSlots
      */
     private function isSlotValid(
         array $task,
@@ -157,7 +154,8 @@ class ScheduleGeneratorService
         }
         // Teacher unavailability
         $teacherUnavail = $unavailGroups[$task['teacher_id']] ?? collect();
-        return !$teacherUnavail
+
+        return ! $teacherUnavail
             ->where('day_of_week', $day)
             ->where('period_number', $period)
             ->isNotEmpty();

@@ -8,17 +8,22 @@ use Illuminate\Support\Collection;
 interface ClassroomRepoInterface
 {
     public function getAllByStudyProgram(int $studyProgramId): Collection;
+
     public function getAllByTenant(int $tenantId): Collection;
+
     public function getById(int $id): ?Classroom;
+
     public function getByPublicId(string $public_id): ?Classroom;
+
     public function create(array $data): Classroom;
+
     public function update(int $id, array $data): bool;
+
     public function delete(int $id): bool;
 }
 
 class ClassroomRepository implements ClassroomRepoInterface
 {
-
     public function getAllByStudyProgram(int $studyProgramId): Collection
     {
         return Classroom::with(['studyProgram', 'homeroomAssignment.teacher'])
@@ -34,7 +39,7 @@ class ClassroomRepository implements ClassroomRepoInterface
             // SD/SMP classrooms: no study_program, scoped directly by tenant_id
             $q->where('tenant_id', $tenantId)->whereNull('study_program_id');
         })
-            ->orWhereHas('studyProgram', fn($q) => $q->where('tenant_id', $tenantId))
+            ->orWhereHas('studyProgram', fn ($q) => $q->where('tenant_id', $tenantId))
             ->with(['studyProgram', 'homeroomAssignment.teacher'])
             ->orderBy('grade_level')
             ->orderBy('name')
@@ -60,6 +65,7 @@ class ClassroomRepository implements ClassroomRepoInterface
     {
         $classroom = Classroom::findOrFail($id);
         $classroom->update($data);
+
         return true;
     }
 

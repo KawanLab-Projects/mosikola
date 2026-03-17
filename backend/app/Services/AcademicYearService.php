@@ -10,21 +10,20 @@ use App\Models\StudentGradeLog;
 use App\Models\Tenant;
 use App\Repositories\Contracts\AcademicYearRepoInterface;
 use Exception;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class AcademicYearService
 {
     // Maps school_type → max grade level
     const GRADE_MAP = [
-        'SD'  => ['min' => 1, 'max' => 6],
-        'MI'  => ['min' => 1, 'max' => 6],
+        'SD' => ['min' => 1, 'max' => 6],
+        'MI' => ['min' => 1, 'max' => 6],
         'SMP' => ['min' => 7, 'max' => 9],
         'MTS' => ['min' => 7, 'max' => 9],
         'SMA' => ['min' => 10, 'max' => 12],
         'SMK' => ['min' => 10, 'max' => 12],
         'MAK' => ['min' => 10, 'max' => 12],
-        'MA'  => ['min' => 10, 'max' => 12],
+        'MA' => ['min' => 10, 'max' => 12],
     ];
 
     public function __construct(
@@ -44,11 +43,11 @@ class AcademicYearService
     public function create(int $tenantId, array $data): AcademicYear
     {
         return $this->repo->create([
-            'tenant_id'  => $tenantId,
-            'name'       => $data['name'],
+            'tenant_id' => $tenantId,
+            'name' => $data['name'],
             'start_date' => $data['start_date'],
-            'end_date'   => $data['end_date'],
-            'is_active'  => false,
+            'end_date' => $data['end_date'],
+            'is_active' => false,
         ]);
     }
 
@@ -56,7 +55,7 @@ class AcademicYearService
     {
         $year = $this->repo->findById($academicYearId);
 
-        if (!$year || $year->tenant_id !== $tenantId) {
+        if (! $year || $year->tenant_id !== $tenantId) {
             throw new Exception('Tahun ajaran tidak ditemukan.');
         }
 
@@ -71,14 +70,14 @@ class AcademicYearService
      */
     public function closeYear(AcademicYear $year, Tenant $tenant, int $performedBy): void
     {
-        if (!$year->is_active) {
+        if (! $year->is_active) {
             throw new Exception('Tahun ajaran ini tidak aktif.');
         }
 
         $schoolType = strtoupper($tenant->school_type ?? '');
         $gradeConfig = self::GRADE_MAP[$schoolType] ?? null;
 
-        if (!$gradeConfig) {
+        if (! $gradeConfig) {
             throw new Exception("Jenis sekolah '{$tenant->school_type}' tidak dikenali.");
         }
 
@@ -87,7 +86,7 @@ class AcademicYearService
 
             // Fetch all active students belonging to this tenant's classrooms
             $students = Student::active()
-                ->whereHas('classroom.studyProgram', fn($q) => $q->where('tenant_id', $tenant->id))
+                ->whereHas('classroom.studyProgram', fn ($q) => $q->where('tenant_id', $tenant->id))
                 ->with('classroom')
                 ->get();
 
@@ -100,12 +99,12 @@ class AcademicYearService
                     $student->update(['status' => 'archived']);
 
                     StudentGradeLog::create([
-                        'student_id'        => $student->id,
-                        'academic_year_id'  => $year->id,
+                        'student_id' => $student->id,
+                        'academic_year_id' => $year->id,
                         'from_classroom_id' => $fromClassroomId,
-                        'to_classroom_id'   => null,
-                        'action'            => 'archived',
-                        'performed_by'      => $performedBy,
+                        'to_classroom_id' => null,
+                        'action' => 'archived',
+                        'performed_by' => $performedBy,
                     ]);
                 } else {
                     // Promote: find classroom with grade_level + 1
@@ -115,8 +114,8 @@ class AcademicYearService
                     $nextClassroom = Classroom::where('grade_level', $currentGrade + 1)
                         ->when(
                             $studyProgramId,
-                            fn($q) => $q->where('study_program_id', $studyProgramId),
-                            fn($q) => $q->whereNull('study_program_id') // SD/SMP: no jurusan
+                            fn ($q) => $q->where('study_program_id', $studyProgramId),
+                            fn ($q) => $q->whereNull('study_program_id') // SD/SMP: no jurusan
                         )
                         ->first();
 
@@ -124,19 +123,19 @@ class AcademicYearService
                         $student->update(['classroom_id' => $nextClassroom->id]);
 
                         StudentGradeLog::create([
-                            'student_id'        => $student->id,
-                            'academic_year_id'  => $year->id,
+                            'student_id' => $student->id,
+                            'academic_year_id' => $year->id,
                             'from_classroom_id' => $fromClassroomId,
-                            'to_classroom_id'   => $nextClassroom->id,
-                            'action'            => 'promoted',
-                            'performed_by'      => $performedBy,
+                            'to_classroom_id' => $nextClassroom->id,
+                            'action' => 'promoted',
+                            'performed_by' => $performedBy,
                         ]);
                     }
                 }
             }
 
             // Archive all attendance records under this academic year
-            Attendance::whereHas('student.classroom.studyProgram', fn($q) => $q->where('tenant_id', $tenant->id))
+            Attendance::whereHas('student.classroom.studyProgram', fn ($q) => $q->where('tenant_id', $tenant->id))
                 ->whereNull('academic_year_id')
                 ->update(['academic_year_id' => $year->id]);
 
@@ -156,12 +155,12 @@ class AcademicYearService
             $student->update(['classroom_id' => $toClassroom->id]);
 
             StudentGradeLog::create([
-                'student_id'       => $student->id,
+                'student_id' => $student->id,
                 'academic_year_id' => $academicYearId,
                 'from_classroom_id' => $fromClassroomId,
-                'to_classroom_id'  => $toClassroom->id,
-                'action'           => 'demoted',
-                'performed_by'     => $performedBy,
+                'to_classroom_id' => $toClassroom->id,
+                'action' => 'demoted',
+                'performed_by' => $performedBy,
             ]);
         });
     }

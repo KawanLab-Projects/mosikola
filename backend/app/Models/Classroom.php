@@ -17,7 +17,7 @@ class Classroom extends Model
 
     protected $hidden = [
         'id',
-        'study_program_id'
+        'study_program_id',
     ];
 
     public function studyProgram()
@@ -38,6 +38,6 @@ class Classroom extends Model
     {
         return $this->hasOne(TeacherAssignment::class)
             ->where('assignment_type', 'wali_kelas')
-            ->whereHas('academicYear', fn($q) => $q->where('is_active', true));
+            ->whereHas('academicYear', fn ($q) => $q->where('is_active', true));
     }
 }

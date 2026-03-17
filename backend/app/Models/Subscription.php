@@ -13,13 +13,13 @@ class Subscription extends Model
         'locked_price',
         'start_date',
         'end_date',
-        'is_active'
+        'is_active',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
     ];
 
     public function tenant()
@@ -56,9 +56,9 @@ class Subscription extends Model
                 ->update(['is_active' => false]);
 
             // Activate this subscription
-            $this->is_active  = true;
+            $this->is_active = true;
             $this->start_date = now()->toDateString();
-            $this->end_date   = now()->addYear()->toDateString();
+            $this->end_date = now()->addYear()->toDateString();
             $this->save();
         });
     }

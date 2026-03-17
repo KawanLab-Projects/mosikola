@@ -31,7 +31,9 @@ class SubjectService
     public function update(string $publicId, array $data): bool
     {
         $subject = $this->getByPublicId($publicId);
-        if (!$subject) return false;
+        if (! $subject) {
+            return false;
+        }
 
         return $subject->update($data);
     }
@@ -39,9 +41,12 @@ class SubjectService
     public function delete(string $publicId): bool
     {
         $subject = $this->getByPublicId($publicId);
-        if (!$subject) return false;
+        if (! $subject) {
+            return false;
+        }
 
         $subject->delete();
+
         return true;
     }
 }

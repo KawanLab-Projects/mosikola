@@ -27,7 +27,7 @@ class Student extends Model
         'user_id',
         'classroom_id',
         'created_at',
-        'updated_at'
+        'updated_at',
     ];
 
     public function user()
@@ -78,7 +78,9 @@ class Student extends Model
     public function getTotalPointsAttribute()
     {
         $tenantId = $this->tenant_id;
-        if (!$tenantId) return 0;
+        if (! $tenantId) {
+            return 0;
+        }
 
         // Fetch settings using the correct helper method
         $validity = \App\Models\TenantSetting::getValue($tenantId, 'discipline', 'points_validity', 'academic_year');
@@ -99,6 +101,7 @@ class Student extends Model
         if ($validity === 'reduction') {
             $positivePoints = (int) $posQuery->sum('positive_behaviors.point_value');
             $total = $violationPoints - $positivePoints;
+
             return $total > 0 ? $total : 0; // Points shouldn't be negative generally, but can be bounded
         }
 

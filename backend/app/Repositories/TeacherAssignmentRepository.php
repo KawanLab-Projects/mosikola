@@ -8,11 +8,17 @@ use Illuminate\Support\Collection;
 interface TeacherAssignmentRepoInterface
 {
     public function getByTeacher(int $teacherId, ?int $academicYearId): Collection;
+
     public function getByClassroom(int $classroomId, int $academicYearId): Collection;
+
     public function findById(int $id): ?TeacherAssignment;
+
     public function create(array $data): TeacherAssignment;
+
     public function delete(TeacherAssignment $assignment): void;
+
     public function existsWaliKelas(int $classroomId, int $academicYearId): bool;
+
     public function existsGuruMapel(int $classroomId, int $academicYearId, string $subject): bool;
 }
 
@@ -21,7 +27,7 @@ class TeacherAssignmentRepository implements TeacherAssignmentRepoInterface
     public function getByTeacher(int $teacherId, ?int $academicYearId): Collection
     {
         return TeacherAssignment::where('teacher_id', $teacherId)
-            ->when($academicYearId, fn($q) => $q->where('academic_year_id', $academicYearId))
+            ->when($academicYearId, fn ($q) => $q->where('academic_year_id', $academicYearId))
             ->with(['classroom', 'academicYear'])
             ->orderBy('assignment_type')
             ->get();

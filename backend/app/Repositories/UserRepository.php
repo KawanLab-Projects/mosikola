@@ -10,8 +10,8 @@ class UserRepository implements UserRepoInterface
     public function create(array $data, string $role): User
     {
         $user = User::create([
-            'name'     => $data['name'],
-            'email'    => $data['email'],
+            'name' => $data['name'],
+            'email' => $data['email'],
             'password' => $data['password'], // Model 'hashed' cast handles hashing
         ]);
 

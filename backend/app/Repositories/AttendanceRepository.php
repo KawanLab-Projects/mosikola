@@ -10,9 +10,13 @@ use Illuminate\Support\Collection;
 interface AttendanceRepoInterface
 {
     public function create(array $data): Attendance;
+
     public function checkAttendance(Student $student): bool;
+
     public function getStudentAttendanceOnDate(int $studentId, string $date): ?Attendance;
+
     public function getLateArrival(string $date, string $limitTime): ?Collection;
+
     public function getByStudentIdsAndMonth(array $studentIds, Carbon $start, Carbon $end);
 }
 
@@ -53,7 +57,7 @@ class AttendanceRepository implements AttendanceRepoInterface
         return Attendance::whereIn('student_id', $studentIds)
             ->whereBetween('attendance_date', [
                 $start->toDateString(),
-                $end->toDateString()
+                $end->toDateString(),
             ])
             ->orderBy('attended_at')
             ->get();

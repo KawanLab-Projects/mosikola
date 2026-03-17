@@ -30,6 +30,7 @@ const FEATURE_LABELS: Record<string, string> = {
     absensi_mapel: "Absensi Mapel",
     piket: "Piket",
     bimbingan_konseling: "Bimbingan Konseling",
+    kiosk: "Anjungan Sekolah",
     import_schedule: "Import Jadwal XML",
     ai_counseling: "AI Helper Bimbingan Konseling",
     ai_analytics: "AI & EWS Analitik Full",
@@ -43,6 +44,7 @@ const DEFAULT_FEATURE_KEYS = [
     "jurnal_mapel",
     "absensi_mapel",
     "piket",
+    "kiosk",
     "bimbingan_konseling",
 ]
 
@@ -148,7 +150,7 @@ export function PricingGrid({ plans, currentPlanId }: PricingGridProps) {
                                     <>
                                         <div className="flex items-start gap-2 text-muted-foreground">
                                             <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                                            <span className="italic">Semua fitur di Gratis</span>
+                                            <span className="italic">Semua fitur di <i>Freemium</i></span>
                                         </div>
                                         {premiumFeatures.map((label: string) => (
                                             <div key={label} className="flex items-start gap-2 text-muted-foreground">

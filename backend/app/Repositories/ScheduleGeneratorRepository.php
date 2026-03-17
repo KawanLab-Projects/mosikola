@@ -28,10 +28,10 @@ class ScheduleGeneratorRepository
             'start_time',
             'end_time',
             'created_at',
-            'updated_at'
+            'updated_at',
         ];
 
-        $filtered = array_map(fn($row) => array_intersect_key($row, array_flip($dbKeys)), $rows);
+        $filtered = array_map(fn ($row) => array_intersect_key($row, array_flip($dbKeys)), $rows);
 
         foreach (array_chunk($filtered, 200) as $chunk) {
             Schedule::insert($chunk);

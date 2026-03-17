@@ -16,7 +16,8 @@ class CurriculumItemController extends Controller
     private function resolveTenantId(Request $request): int
     {
         $tenantUser = $request->user()->tenantUsers()->where('is_active', true)->first();
-        abort_if(!$tenantUser, 403, 'Akses ditolak.');
+        abort_if(! $tenantUser, 403, 'Akses ditolak.');
+
         return $tenantUser->tenant_id;
     }
 
@@ -25,9 +26,9 @@ class CurriculumItemController extends Controller
     {
         $request->validate(['academic_year_id' => 'required|integer']);
 
-        $tenantId       = $this->resolveTenantId($request);
+        $tenantId = $this->resolveTenantId($request);
         $academicYearId = (int) $request->query('academic_year_id');
-        $classroomId    = null;
+        $classroomId = null;
 
         if ($request->query('classroom_id')) {
             $classroomId = (int) $request->query('classroom_id');
@@ -46,31 +47,31 @@ class CurriculumItemController extends Controller
     public function suggestions(Request $request): JsonResponse
     {
         $request->validate([
-            'academic_year_id'    => 'required|integer',
+            'academic_year_id' => 'required|integer',
             'classroom_public_id' => 'required|string|exists:classrooms,public_id',
         ]);
 
         $academicYearId = (int) $request->query('academic_year_id');
-        $classroom      = \App\Models\Classroom::where('public_id', $request->query('classroom_public_id'))->firstOrFail();
+        $classroom = \App\Models\Classroom::where('public_id', $request->query('classroom_public_id'))->firstOrFail();
 
         $assignments = $this->assignmentRepo->getByClassroom($classroom->id, $academicYearId);
-        
+
         // Map assignments to suggested subjects by name matching
-        $suggestions = $assignments->filter(fn($a) => $a->assignment_type === 'guru_mapel')
+        $suggestions = $assignments->filter(fn ($a) => $a->assignment_type === 'guru_mapel')
             ->map(function ($a) {
                 $subject = \App\Models\Subject::where('name', 'ilike', trim($a->subject))
-                    ->orWhere('name', 'like', '%' . trim($a->subject) . '%')
+                    ->orWhere('name', 'like', '%'.trim($a->subject).'%')
                     ->first();
 
                 return [
-                    'teacher_id'      => $a->teacher_id,
-                    'teacher_name'    => $a->teacher->name,
-                    'teacher_public_id'=> $a->teacher->public_id,
+                    'teacher_id' => $a->teacher_id,
+                    'teacher_name' => $a->teacher->name,
+                    'teacher_public_id' => $a->teacher->public_id,
                     'assignment_subject_name' => $a->subject,
-                    'suggested_subject_id'    => $subject?->id,
-                    'suggested_subject_name'  => $subject?->name,
+                    'suggested_subject_id' => $subject?->id,
+                    'suggested_subject_name' => $subject?->name,
                     'suggested_subject_public_id' => $subject?->public_id,
-                    'hours_per_week'  => 2, // Default
+                    'hours_per_week' => 2, // Default
                 ];
             });
 
@@ -81,35 +82,35 @@ class CurriculumItemController extends Controller
     public function bulkStore(Request $request): JsonResponse
     {
         $request->validate([
-            'academic_year_id'    => 'required|integer|exists:academic_years,id',
+            'academic_year_id' => 'required|integer|exists:academic_years,id',
             'classroom_public_id' => 'required|string|exists:classrooms,public_id',
-            'items'               => 'required|array',
+            'items' => 'required|array',
             'items.*.subject_public_id' => 'required|string|exists:subjects,public_id',
             'items.*.teacher_public_id' => 'required|string|exists:teachers,public_id',
-            'items.*.hours_per_week'    => 'required|integer|min:1|max:40',
+            'items.*.hours_per_week' => 'required|integer|min:1|max:40',
         ]);
 
-        $tenantId    = $this->resolveTenantId($request);
+        $tenantId = $this->resolveTenantId($request);
         $classroomId = \App\Models\Classroom::where('public_id', $request->classroom_public_id)->value('id');
 
         $createdCount = 0;
         foreach ($request->items as $itemData) {
-            $subjectId   = \App\Models\Subject::where('public_id', $itemData['subject_public_id'])->value('id');
-            $teacherId   = \App\Models\Teacher::where('public_id', $itemData['teacher_public_id'])->value('id');
+            $subjectId = \App\Models\Subject::where('public_id', $itemData['subject_public_id'])->value('id');
+            $teacherId = \App\Models\Teacher::where('public_id', $itemData['teacher_public_id'])->value('id');
 
             // Check if exists to avoid duplication
             $exists = \App\Models\CurriculumItem::where([
-                'tenant_id'        => $tenantId,
+                'tenant_id' => $tenantId,
                 'academic_year_id' => $request->academic_year_id,
-                'classroom_id'     => $classroomId,
-                'subject_id'       => $subjectId,
+                'classroom_id' => $classroomId,
+                'subject_id' => $subjectId,
             ])->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 $this->service->create($tenantId, $request->academic_year_id, [
-                    'classroom_id'   => $classroomId,
-                    'subject_id'     => $subjectId,
-                    'teacher_id'     => $teacherId,
+                    'classroom_id' => $classroomId,
+                    'subject_id' => $subjectId,
+                    'teacher_id' => $teacherId,
                     'hours_per_week' => $itemData['hours_per_week'],
                 ]);
                 $createdCount++;
@@ -118,7 +119,7 @@ class CurriculumItemController extends Controller
 
         return response()->json([
             'message' => "Berhasil menambahkan {$createdCount} entri kurikulum.",
-            'created_count' => $createdCount
+            'created_count' => $createdCount,
         ], 201);
     }
 
@@ -126,22 +127,22 @@ class CurriculumItemController extends Controller
     public function store(Request $request): JsonResponse
     {
         $request->validate([
-            'academic_year_id'    => 'required|integer|exists:academic_years,id',
+            'academic_year_id' => 'required|integer|exists:academic_years,id',
             'classroom_public_id' => 'required|string|exists:classrooms,public_id',
-            'subject_public_id'   => 'required|string|exists:subjects,public_id',
-            'teacher_public_id'   => 'required|string|exists:teachers,public_id',
-            'hours_per_week'      => 'required|integer|min:1|max:40',
+            'subject_public_id' => 'required|string|exists:subjects,public_id',
+            'teacher_public_id' => 'required|string|exists:teachers,public_id',
+            'hours_per_week' => 'required|integer|min:1|max:40',
         ]);
 
-        $tenantId    = $this->resolveTenantId($request);
+        $tenantId = $this->resolveTenantId($request);
         $classroomId = \App\Models\Classroom::where('public_id', $request->classroom_public_id)->value('id');
-        $subjectId   = \App\Models\Subject::where('public_id', $request->subject_public_id)->value('id');
-        $teacherId   = \App\Models\Teacher::where('public_id', $request->teacher_public_id)->value('id');
+        $subjectId = \App\Models\Subject::where('public_id', $request->subject_public_id)->value('id');
+        $teacherId = \App\Models\Teacher::where('public_id', $request->teacher_public_id)->value('id');
 
         $item = $this->service->create($tenantId, $request->academic_year_id, [
-            'classroom_id'   => $classroomId,
-            'subject_id'     => $subjectId,
-            'teacher_id'     => $teacherId,
+            'classroom_id' => $classroomId,
+            'subject_id' => $subjectId,
+            'teacher_id' => $teacherId,
             'hours_per_week' => $request->hours_per_week,
         ]);
 
@@ -153,16 +154,16 @@ class CurriculumItemController extends Controller
     {
         $request->validate([
             'teacher_public_id' => 'required|string|exists:teachers,public_id',
-            'hours_per_week'    => 'required|integer|min:1|max:40',
+            'hours_per_week' => 'required|integer|min:1|max:40',
         ]);
 
         $teacherId = \App\Models\Teacher::where('public_id', $request->teacher_public_id)->value('id');
 
         $updated = $this->service->update($id, [
-            'teacher_id'     => $teacherId,
+            'teacher_id' => $teacherId,
             'hours_per_week' => $request->hours_per_week,
         ]);
-        abort_if(!$updated, 404, 'Data kurikulum tidak ditemukan.');
+        abort_if(! $updated, 404, 'Data kurikulum tidak ditemukan.');
 
         return response()->json(['message' => 'Kurikulum berhasil diperbarui.']);
     }
@@ -171,7 +172,7 @@ class CurriculumItemController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $deleted = $this->service->delete($id);
-        abort_if(!$deleted, 404, 'Data kurikulum tidak ditemukan.');
+        abort_if(! $deleted, 404, 'Data kurikulum tidak ditemukan.');
 
         return response()->json(['message' => 'Kurikulum berhasil dihapus.']);
     }
@@ -180,7 +181,7 @@ class CurriculumItemController extends Controller
     public function copy(Request $request): JsonResponse
     {
         $request->validate([
-            'academic_year_id'           => 'required|integer|exists:academic_years,id',
+            'academic_year_id' => 'required|integer|exists:academic_years,id',
             'source_classroom_public_id' => 'required|string|exists:classrooms,public_id',
             'target_classroom_public_id' => 'required|string|exists:classrooms,public_id',
         ]);
@@ -191,7 +192,7 @@ class CurriculumItemController extends Controller
             'Kelas sumber dan tujuan tidak boleh sama.'
         );
 
-        $tenantId          = $this->resolveTenantId($request);
+        $tenantId = $this->resolveTenantId($request);
         $sourceClassroomId = \App\Models\Classroom::where('public_id', $request->source_classroom_public_id)->value('id');
         $targetClassroomId = \App\Models\Classroom::where('public_id', $request->target_classroom_public_id)->value('id');
 
@@ -201,7 +202,7 @@ class CurriculumItemController extends Controller
             'message' => $copiedCount > 0
                 ? "Berhasil menyalin {$copiedCount} mata pelajaran kurikulum."
                 : 'Tidak ada data kurikulum baru yang disalin (mungkin sudah ada atau sumber kosong).',
-            'copied_count' => $copiedCount
+            'copied_count' => $copiedCount,
         ], 201);
     }
 }

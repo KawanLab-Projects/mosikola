@@ -10,7 +10,7 @@ class GuruWaliStudent extends Model
         'tenant_id',
         'academic_year_id',
         'teacher_id',
-        'student_id'
+        'student_id',
     ];
 
     public function tenant()

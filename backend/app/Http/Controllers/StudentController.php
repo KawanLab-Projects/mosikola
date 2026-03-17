@@ -12,12 +12,14 @@ class StudentController extends Controller
     private function resolveTenantId(Request $request): ?int
     {
         $tenantUser = $request->user()->tenantUsers()->where('is_active', true)->first();
+
         return $tenantUser?->tenant_id;
     }
 
     public function index($classroomPublicId)
     {
         $students = $this->studentService->getStudentsByClassroom($classroomPublicId);
+
         return response()->json(['students' => $students]);
     }
 
@@ -25,18 +27,19 @@ class StudentController extends Controller
     public function indexByTenant(Request $request)
     {
         $tenantId = $this->resolveTenantId($request);
-        if (!$tenantId) {
+        if (! $tenantId) {
             return response()->json(['message' => 'Tenant tidak ditemukan.'], 403);
         }
 
         $students = $this->studentService->getStudentsByTenant($tenantId);
+
         return response()->json(['data' => $students]);
     }
 
     public function show($publicId)
     {
         $student = $this->studentService->getByPublicId($publicId);
-        if (!$student) {
+        if (! $student) {
             return response()->json(['message' => 'Siswa tidak ditemukan.'], 404);
         }
 
@@ -50,7 +53,7 @@ class StudentController extends Controller
         $studentArray['total_points'] = $totalPoints;
 
         return response()->json([
-            'data' => $studentArray
+            'data' => $studentArray,
         ]);
     }
 
@@ -58,12 +61,12 @@ class StudentController extends Controller
     public function store(Request $request, $classroomPublicId)
     {
         $request->validate([
-            'name'         => 'required|string|max:255',
-            'nisn'         => 'required|string|max:20|unique:students,nisn',
-            'birth_place'  => 'nullable|string|max:255',
-            'birth_date'   => 'required|date',
-            'address'      => 'required|string|max:500',
-            'parent_name'  => 'required|string|max:255',
+            'name' => 'required|string|max:255',
+            'nisn' => 'required|string|max:20|unique:students,nisn',
+            'birth_place' => 'nullable|string|max:255',
+            'birth_date' => 'required|date',
+            'address' => 'required|string|max:500',
+            'parent_name' => 'required|string|max:255',
             'parent_phone' => 'required|string|max:20',
         ]);
 
@@ -85,7 +88,7 @@ class StudentController extends Controller
             );
 
             return response()->json([
-                'data'    => $student,
+                'data' => $student,
                 'message' => 'Siswa berhasil ditambahkan.',
             ], 201);
         } catch (\InvalidArgumentException $e) {
@@ -118,11 +121,11 @@ class StudentController extends Controller
     public function update(Request $request, $publicId)
     {
         $request->validate([
-            'name'         => 'sometimes|required|string|max:255',
-            'birth_place'  => 'nullable|string|max:255',
-            'birth_date'   => 'sometimes|required|date',
-            'address'      => 'sometimes|required|string|max:500',
-            'parent_name'  => 'sometimes|required|string|max:255',
+            'name' => 'sometimes|required|string|max:255',
+            'birth_place' => 'nullable|string|max:255',
+            'birth_date' => 'sometimes|required|date',
+            'address' => 'sometimes|required|string|max:500',
+            'parent_name' => 'sometimes|required|string|max:255',
             'parent_phone' => 'sometimes|required|string|max:20',
         ]);
 
@@ -138,7 +141,7 @@ class StudentController extends Controller
         $student = $this->studentService->update($publicId, $data);
 
         return response()->json([
-            'data'    => $student,
+            'data' => $student,
             'message' => 'Data siswa berhasil diperbarui.',
         ]);
     }
@@ -146,6 +149,7 @@ class StudentController extends Controller
     public function destroy($publicId)
     {
         $this->studentService->delete($publicId);
+
         return response()->json(['message' => 'Siswa berhasil dihapus.']);
     }
 }

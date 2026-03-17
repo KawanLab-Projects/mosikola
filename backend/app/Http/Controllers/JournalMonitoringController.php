@@ -18,13 +18,13 @@ class JournalMonitoringController extends Controller
     public function index(Request $request): JsonResponse
     {
         $request->validate([
-            'start_date'       => 'required|date_format:Y-m-d',
-            'end_date'         => 'required|date_format:Y-m-d|after_or_equal:start_date',
+            'start_date' => 'required|date_format:Y-m-d',
+            'end_date' => 'required|date_format:Y-m-d|after_or_equal:start_date',
             'academic_year_id' => 'nullable|integer|exists:academic_years,id',
         ]);
 
         $tenantUser = $request->user()->tenantUsers()->where('is_active', true)->first();
-        abort_if(!$tenantUser, 403, 'Akses ditolak.');
+        abort_if(! $tenantUser, 403, 'Akses ditolak.');
 
         $data = $this->service->getWeeklyMonitoring(
             $tenantUser->tenant_id,
@@ -35,7 +35,7 @@ class JournalMonitoringController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $data,
+            'data' => $data,
         ]);
     }
 }

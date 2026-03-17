@@ -46,8 +46,8 @@ export async function GET(request: Request) {
                 'Access-Control-Allow-Methods': 'GET, OPTIONS',
             },
         });
-    } catch (error: any) {
-        if (error.name === 'AbortError') {
+    } catch (error: unknown) {
+        if (error instanceof Error && error.name === 'AbortError') {
             console.error(`[Proxy] Timeout fetching image: ${url}`);
             return new NextResponse('Request Timeout', { status: 504 });
         }

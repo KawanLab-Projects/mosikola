@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\GlobalSetting;
-use App\Services\XenditService;
 use Illuminate\Http\Request;
 
 class XenditSettingController extends Controller
@@ -28,18 +27,18 @@ class XenditSettingController extends Controller
         // Mask the secret key: show only last 4 characters
         $secretKey = $raw['xendit_secret_key'] ?? null;
         if ($secretKey && strlen($secretKey) > 4) {
-            $masked = str_repeat('•', max(0, strlen($secretKey) - 4)) . substr($secretKey, -4);
+            $masked = str_repeat('•', max(0, strlen($secretKey) - 4)).substr($secretKey, -4);
         } else {
             $masked = $secretKey ? str_repeat('•', strlen($secretKey)) : null;
         }
 
         return response()->json([
             'status' => 'success',
-            'data'   => [
-                'xendit_secret_key'    => $masked,
+            'data' => [
+                'xendit_secret_key' => $masked,
                 'xendit_webhook_token' => $raw['xendit_webhook_token'] ?? null,
-                'xendit_frontend_url'  => $raw['xendit_frontend_url'] ?? null,
-                'is_configured'        => !empty($secretKey),
+                'xendit_frontend_url' => $raw['xendit_frontend_url'] ?? null,
+                'is_configured' => ! empty($secretKey),
             ],
         ]);
     }
@@ -52,9 +51,9 @@ class XenditSettingController extends Controller
     public function update(Request $request)
     {
         $data = $request->validate([
-            'xendit_secret_key'    => 'nullable|string|max:255',
+            'xendit_secret_key' => 'nullable|string|max:255',
             'xendit_webhook_token' => 'nullable|string|max:255',
-            'xendit_frontend_url'  => 'nullable|url|max:255',
+            'xendit_frontend_url' => 'nullable|url|max:255',
         ]);
 
         foreach ($data as $key => $value) {
@@ -70,7 +69,7 @@ class XenditSettingController extends Controller
         }
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Pengaturan Xendit berhasil disimpan.',
         ]);
     }
@@ -83,9 +82,9 @@ class XenditSettingController extends Controller
         $secretKey = GlobalSetting::where('key', 'xendit_secret_key')->value('value')
             ?? config('services.xendit.secret_key');
 
-        if (!$secretKey) {
+        if (! $secretKey) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Secret Key belum dikonfigurasi.',
             ], 422);
         }
@@ -97,20 +96,21 @@ class XenditSettingController extends Controller
 
             if ($response->successful()) {
                 $balance = $response->json('balance') ?? $response->json('money_in_amount');
+
                 return response()->json([
-                    'status'  => 'success',
-                    'message' => 'Koneksi berhasil! Balance: IDR ' . number_format((float) ($balance ?? 0), 0, ',', '.'),
+                    'status' => 'success',
+                    'message' => 'Koneksi berhasil! Balance: IDR '.number_format((float) ($balance ?? 0), 0, ',', '.'),
                 ]);
             }
 
             return response()->json([
-                'status'  => 'error',
-                'message' => 'Xendit merespons dengan error: ' . ($response->json('message') ?? 'Unknown error') . ' (HTTP ' . $response->status() . ')',
+                'status' => 'error',
+                'message' => 'Xendit merespons dengan error: '.($response->json('message') ?? 'Unknown error').' (HTTP '.$response->status().')',
             ], 400);
         } catch (\Throwable $e) {
             return response()->json([
-                'status'  => 'error',
-                'message' => 'Gagal terhubung ke Xendit: ' . $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Gagal terhubung ke Xendit: '.$e->getMessage(),
             ], 500);
         }
     }

@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
+use App\Models\AcademicYear;
 use App\Models\GuruWaliStudent;
 use App\Models\Student;
 use App\Models\StudentDevelopmentNote;
 use App\Models\Teacher;
-use App\Models\AcademicYear;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class GuruWaliController extends Controller
@@ -23,7 +22,7 @@ class GuruWaliController extends Controller
         $tenantId = $request->user()->tenantUsers()->first()->tenant_id;
         $academicYearId = $request->query('academic_year_id');
 
-        if (!$academicYearId) {
+        if (! $academicYearId) {
             return response()->json(['message' => 'academic_year_id query parameter is required'], 400);
         }
 
@@ -45,7 +44,7 @@ class GuruWaliController extends Controller
         $request->validate([
             'academic_year_id' => 'required|exists:academic_years,id',
             'student_ids' => 'present|array',
-            'student_ids.*' => 'exists:students,public_id'
+            'student_ids.*' => 'exists:students,public_id',
         ]);
 
         $tenantId = $request->user()->tenantUsers()->first()->tenant_id;
@@ -67,7 +66,7 @@ class GuruWaliController extends Controller
                 ->delete();
 
             // Also ensure these students are not assigned to another Guru Wali in the same year
-            if (!empty($studentInternalIds)) {
+            if (! empty($studentInternalIds)) {
                 GuruWaliStudent::where('tenant_id', $tenantId)
                     ->where('academic_year_id', $academicYearId)
                     ->whereIn('student_id', $studentInternalIds)
@@ -88,14 +87,16 @@ class GuruWaliController extends Controller
                 ];
             }
 
-            if (!empty($inserts)) {
+            if (! empty($inserts)) {
                 GuruWaliStudent::insert($inserts);
             }
 
             DB::commit();
+
             return response()->json(['message' => 'Assignments updated successfully']);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json(['message' => 'Failed to update assignments', 'error' => $e->getMessage()], 500);
         }
     }
@@ -107,7 +108,7 @@ class GuruWaliController extends Controller
     public function getDashboard(Request $request)
     {
         $user = $request->user();
-        if (!$user->teacher) {
+        if (! $user->teacher) {
             return response()->json(['message' => 'User is not a teacher'], 403);
         }
 
@@ -116,9 +117,9 @@ class GuruWaliController extends Controller
 
         // Use active academic year or passed ID
         $academicYearId = $request->query('academic_year_id');
-        if (!$academicYearId) {
+        if (! $academicYearId) {
             $activeYear = AcademicYear::where('tenant_id', $tenantId)->where('is_active', true)->first();
-            if (!$activeYear) {
+            if (! $activeYear) {
                 return response()->json(['message' => 'No active academic year found'], 404);
             }
             $academicYearId = $activeYear->id;
@@ -138,12 +139,13 @@ class GuruWaliController extends Controller
             // Simplified aggregation - normally we'd pull from attending/points models specific to queries
             $student->total_points = clone $student->total_points; // Triggers attribute computation
             $student->attendance_summary = $this->calculateAttendanceSummary($student);
+
             return $student;
         });
 
         return response()->json([
             'data' => clone $students,
-            'academic_year_id' => clone $academicYearId
+            'academic_year_id' => clone $academicYearId,
         ]);
     }
 
@@ -151,6 +153,7 @@ class GuruWaliController extends Controller
     {
         // Simple attendance summary logic: count (izin, sakit, alpa)
         $attendances = $student->attendances()->whereYear('date', date('Y'))->get();
+
         return [
             'sick' => clone $attendances->where('status', 'sick')->count(),
             'permission' => clone $attendances->where('status', 'permission')->count(),
@@ -172,7 +175,7 @@ class GuruWaliController extends Controller
             'studentPositiveBehaviors.positiveBehavior',
             'attendances' => function ($q) {
                 $q->latest('date')->take(20);
-            } // Last 20 attendances
+            }, // Last 20 attendances
         ])->where('tenant_id', $tenantId)->findOrFail($studentId);
 
         return response()->json(['data' => clone $student]);
@@ -202,11 +205,11 @@ class GuruWaliController extends Controller
         $request->validate([
             'note' => 'required|string',
             'date' => 'required|date',
-            'academic_year_id' => 'required|exists:academic_years,id'
+            'academic_year_id' => 'required|exists:academic_years,id',
         ]);
 
         $user = clone $request->user();
-        if (!$user->teacher) {
+        if (! $user->teacher) {
             return response()->json(['message' => 'User is not a teacher'], 403);
         }
 

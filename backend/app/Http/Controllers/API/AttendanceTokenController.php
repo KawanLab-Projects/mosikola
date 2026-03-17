@@ -17,13 +17,14 @@ class AttendanceTokenController extends Controller
     public function getToken(Request $request)
     {
         $kioskToken = $request->header('x-kiosk-token');
-        if (!$kioskToken) {
-            Log::error('Missing kiosk token. Headers: ' . json_encode($request->headers->all()));
+        if (! $kioskToken) {
+            Log::error('Missing kiosk token. Headers: '.json_encode($request->headers->all()));
+
             return response()->json(['message' => 'Unauthorized Kiosk', 'received_headers' => $request->headers->all()], 401);
         }
 
         $tenantSetting = TenantSetting::where('key', 'kiosk_token')->where('value', $kioskToken)->first();
-        if (!$tenantSetting) {
+        if (! $tenantSetting) {
             return response()->json(['message' => 'Invalid Kiosk Token'], 401);
         }
 
@@ -45,7 +46,7 @@ class AttendanceTokenController extends Controller
                 'inactivity_timeout_minutes' => $inactivityTimeout,
                 'school_start_time' => $schoolStartTime,
                 'school_end_time' => $schoolEndTime,
-            ]
+            ],
         ]);
     }
 
@@ -57,12 +58,12 @@ class AttendanceTokenController extends Controller
     public function validateToken(Request $request)
     {
         $kioskToken = $request->header('x-kiosk-token');
-        if (!$kioskToken) {
+        if (! $kioskToken) {
             return response()->json(['valid' => false, 'message' => 'Missing kiosk token'], 401);
         }
 
         $tenantSetting = TenantSetting::where('key', 'kiosk_token')->where('value', $kioskToken)->first();
-        if (!$tenantSetting) {
+        if (! $tenantSetting) {
             return response()->json(['valid' => false, 'message' => 'Invalid kiosk token'], 401);
         }
 
@@ -77,23 +78,23 @@ class AttendanceTokenController extends Controller
         $schoolEndTime = TenantSetting::getValue($tenantSetting->tenant_id, 'attendance', 'school_end_time', '14:00');
 
         return response()->json([
-            'valid'                            => true,
-            'tenant_id'                        => $tenantSetting->tenant_id,
-            'inactivity_timeout_minutes'       => $inactivityTimeout,
-            'school_start_time'                => $schoolStartTime,
-            'school_end_time'                  => $schoolEndTime,
+            'valid' => true,
+            'tenant_id' => $tenantSetting->tenant_id,
+            'inactivity_timeout_minutes' => $inactivityTimeout,
+            'school_start_time' => $schoolStartTime,
+            'school_end_time' => $schoolEndTime,
         ], 200);
     }
 
     public function getStudents(Request $request)
     {
         $kioskToken = $request->header('x-kiosk-token');
-        if (!$kioskToken) {
+        if (! $kioskToken) {
             return response()->json(['message' => 'Unauthorized Kiosk'], 401);
         }
 
         $tenantSetting = TenantSetting::where('key', 'kiosk_token')->where('value', $kioskToken)->first();
-        if (!$tenantSetting) {
+        if (! $tenantSetting) {
             return response()->json(['message' => 'Invalid Kiosk Token'], 401);
         }
 

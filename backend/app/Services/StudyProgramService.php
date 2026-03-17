@@ -25,7 +25,6 @@ class StudyProgramService
         return $this->studyProgramRepo->getByPublicId($public_id);
     }
 
-
     public function getById(int $id): ?StudyProgram
     {
         return $this->studyProgramRepo->getById($id);
@@ -44,18 +43,20 @@ class StudyProgramService
     public function update(string $public_id, array $data): bool
     {
         $studyProgram = $this->getByPublicId($public_id);
-        if (!$studyProgram) {
+        if (! $studyProgram) {
             return false;
         }
+
         return $this->studyProgramRepo->update($studyProgram->id, $data);
     }
 
     public function delete(string $public_id): bool
     {
         $studyProgram = $this->getByPublicId($public_id);
-        if (!$studyProgram) {
+        if (! $studyProgram) {
             return false;
         }
+
         return $this->studyProgramRepo->delete($studyProgram->id);
     }
 }

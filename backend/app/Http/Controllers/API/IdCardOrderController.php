@@ -4,16 +4,16 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ProcessIdCardZip;
-use App\Models\IdCardTemplate;
 use App\Models\IdCardOrder;
+use App\Models\IdCardTemplate;
 use App\Models\Student;
 use App\Models\Transaction;
 use App\Services\XenditService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Auth;
 
 class IdCardOrderController extends Controller
 {
@@ -48,6 +48,7 @@ class IdCardOrderController extends Controller
         }
 
         $order->save();
+
         return response()->json($order);
     }
 
@@ -57,10 +58,12 @@ class IdCardOrderController extends Controller
         $tenantId = $request->header('X-Tenant-Id');
 
         // If header not strictly enforced globally, default to user's tenant
-        if (!$tenantId && Auth::check()) {
+        if (! $tenantId && Auth::check()) {
             $user = Auth::user();
             $tenantUser = $user->tenantUsers()->where('is_active', true)->first();
-            if ($tenantUser) $tenantId = $tenantUser->tenant_id;
+            if ($tenantUser) {
+                $tenantId = $tenantUser->tenant_id;
+            }
         }
 
         $orders = IdCardOrder::with(['template', 'creator'])
@@ -75,26 +78,26 @@ class IdCardOrderController extends Controller
     public function previewZip(Request $request)
     {
         $request->validate([
-            'zip_file'    => 'required|file|mimes:zip|max:102400', // 100MB max
+            'zip_file' => 'required|file|mimes:zip|max:102400', // 100MB max
             'template_id' => 'required|exists:id_card_templates,public_id',
         ]);
 
         /** @var \App\Models\User $user */
-        $user       = auth()->user();
+        $user = auth()->user();
         $tenantUser = $user->tenantUsers()->where('is_active', true)->first();
-        abort_if(!$tenantUser && !$request->hasHeader('X-Tenant-Id'), 403, 'Akses ditolak.');
-        $tenantId   = $request->header('X-Tenant-Id') ?? $tenantUser->tenant_id;
+        abort_if(! $tenantUser && ! $request->hasHeader('X-Tenant-Id'), 403, 'Akses ditolak.');
+        $tenantId = $request->header('X-Tenant-Id') ?? $tenantUser->tenant_id;
 
         // Save ZIP to local storage (worker will pick it up)
-        $jobId    = (string) Str::uuid();
-        $zipPath  = 'temp_zips/uploads/' . $jobId . '.zip';
+        $jobId = (string) Str::uuid();
+        $zipPath = 'temp_zips/uploads/'.$jobId.'.zip';
         Storage::disk('local')->put($zipPath, file_get_contents($request->file('zip_file')->getPathname()));
 
         // Initialise the cache entry immediately so the frontend can start polling
-        Cache::put('zip_job:' . $jobId, [
-            'status'  => 'queued',
+        Cache::put('zip_job:'.$jobId, [
+            'status' => 'queued',
             'current' => 0,
-            'total'   => 0,
+            'total' => 0,
         ], 1800);
 
         // Dispatch the background job
@@ -105,9 +108,9 @@ class IdCardOrderController extends Controller
 
     public function zipJobStatus(string $jobId)
     {
-        $data = Cache::get('zip_job:' . $jobId);
+        $data = Cache::get('zip_job:'.$jobId);
 
-        if (!$data) {
+        if (! $data) {
             return response()->json(['status' => 'not_found'], 404);
         }
 
@@ -137,12 +140,12 @@ class IdCardOrderController extends Controller
         /** @var \App\Models\User $user */
         $user = auth()->user();
         $tenantUser = $user->tenantUsers()->where('is_active', true)->first();
-        abort_if(!$tenantUser && !$request->hasHeader('X-Tenant-Id'), 403, 'Akses ditolak.');
+        abort_if(! $tenantUser && ! $request->hasHeader('X-Tenant-Id'), 403, 'Akses ditolak.');
         $tenantId = $request->header('X-Tenant-Id') ?? $tenantUser->tenant_id;
 
         // Prevent duplicate clicks
-        $lock = \Illuminate\Support\Facades\Cache::lock('order-card-' . $tenantId . '-' . $user->id, 5);
-        if (!$lock->get()) {
+        $lock = \Illuminate\Support\Facades\Cache::lock('order-card-'.$tenantId.'-'.$user->id, 5);
+        if (! $lock->get()) {
             return response()->json(['message' => 'Pesanan sedang diproses. Jangan klik terlalu cepat.'], 429);
         }
 
@@ -158,8 +161,8 @@ class IdCardOrderController extends Controller
         $totalPrice = $qty * $unitPrice;
 
         try {
-            $order = new IdCardOrder();
-            $order->id = 'ORD-KARTU-' . strtoupper(Str::random(8));
+            $order = new IdCardOrder;
+            $order->id = 'ORD-KARTU-'.strtoupper(Str::random(8));
             $order->tenant_id = $tenantId;
             $order->template_id = $template->id;
             $order->card_type = $validated['card_type'];
@@ -182,8 +185,8 @@ class IdCardOrderController extends Controller
                         'nisn' => $student->nisn,
                         'jurusan' => $student->classroom?->studyProgram?->name ?? '',
                         'birth_place' => $student->birth_place ?? '',
-                        'birth_date' => $student->birth_date ?? ''
-                    ]
+                        'birth_date' => $student->birth_date ?? '',
+                    ],
                 ]);
             }
 
@@ -195,7 +198,7 @@ class IdCardOrderController extends Controller
                 'status' => $order->status,
                 'total_qty' => $qty,
                 'total_price' => $order->total_price,
-                'payment_method' => $order->payment_method
+                'payment_method' => $order->payment_method,
             ], 201);
         } finally {
             $lock->release();
@@ -217,28 +220,28 @@ class IdCardOrderController extends Controller
         /** @var \App\Models\User $user */
         $user = auth()->user();
         $tenantUser = $user->tenantUsers()->where('is_active', true)->first();
-        abort_if(!$tenantUser, 403, 'Akses ditolak.');
+        abort_if(! $tenantUser, 403, 'Akses ditolak.');
 
         // Prevent duplicate payment initiations (idempotency)
         $existingTx = $order->transactions()->where('status', 'PENDING')->first();
         if ($existingTx) {
             return response()->json([
-                'invoice_url'    => $existingTx->xendit_invoice_url,
+                'invoice_url' => $existingTx->xendit_invoice_url,
                 'transaction_id' => $existingTx->id,
-                'reference_id'   => $existingTx->reference_id,
+                'reference_id' => $existingTx->reference_id,
             ]);
         }
 
-        $referenceId = 'KARTU-' . strtoupper($id) . '-' . strtoupper(Str::random(6));
+        $referenceId = 'KARTU-'.strtoupper($id).'-'.strtoupper(Str::random(6));
 
         // Create the transaction record first (PENDING)
         $transaction = Transaction::create([
-            'tenant_id'    => $order->tenant_id,
+            'tenant_id' => $order->tenant_id,
             'reference_id' => $referenceId,
             'payable_type' => IdCardOrder::class,
-            'payable_id'   => $order->id,
-            'amount'       => $order->total_price,
-            'status'       => 'PENDING',
+            'payable_id' => $order->id,
+            'amount' => $order->total_price,
+            'status' => 'PENDING',
         ]);
 
         $invoiceUrl = null;
@@ -250,31 +253,32 @@ class IdCardOrderController extends Controller
                 $xenditService = app(XenditService::class);
                 $invoice = $xenditService->createInvoice([
                     'external_id' => $referenceId,
-                    'amount'      => (int) $order->total_price,
-                    'description' => 'Pembayaran Kartu Siswa – Order ' . $order->id,
+                    'amount' => (int) $order->total_price,
+                    'description' => 'Pembayaran Kartu Siswa – Order '.$order->id,
                     'payer_email' => $user->email,
-                    'success_redirect_url' => config('app.frontend_url', config('app.url')) . '/dashboard/kartu-siswa?status=success',
-                    'failure_redirect_url' => config('app.frontend_url', config('app.url')) . '/dashboard/kartu-siswa?status=failed',
+                    'success_redirect_url' => config('app.frontend_url', config('app.url')).'/dashboard/kartu-siswa?status=success',
+                    'failure_redirect_url' => config('app.frontend_url', config('app.url')).'/dashboard/kartu-siswa?status=failed',
                 ]);
 
-                $invoiceUrl      = $invoice['invoice_url'] ?? null;
+                $invoiceUrl = $invoice['invoice_url'] ?? null;
                 $xenditInvoiceId = $invoice['id'] ?? null;
             } catch (\Throwable $e) {
                 // Rollback the transaction record and surface the error
                 $transaction->delete();
+
                 return response()->json(['message' => $e->getMessage()], 502);
             }
         }
 
         // Persist the Xendit invoice details
         $transaction->xendit_invoice_url = $invoiceUrl;
-        $transaction->xendit_invoice_id  = $xenditInvoiceId;
+        $transaction->xendit_invoice_id = $xenditInvoiceId;
         $transaction->save();
 
         return response()->json([
-            'invoice_url'    => $invoiceUrl,
+            'invoice_url' => $invoiceUrl,
             'transaction_id' => $transaction->id,
-            'reference_id'   => $referenceId,
+            'reference_id' => $referenceId,
         ], 201);
     }
 
@@ -301,7 +305,7 @@ class IdCardOrderController extends Controller
     public function updateNfcUid(Request $request, $id, $studentPublicId)
     {
         $request->validate([
-            'nfc_uid' => 'required|string|max:255'
+            'nfc_uid' => 'required|string|max:255',
         ]);
 
         $order = IdCardOrder::findOrFail($id);
@@ -330,10 +334,10 @@ class IdCardOrderController extends Controller
             ->where('group', 'school')
             ->get()
             ->keyBy('key')
-            ->map(fn($s) => $s->value);
+            ->map(fn ($s) => $s->value);
 
         $logoUrl = null;
-        if (!empty($tenantSettings['school_logo_url'])) {
+        if (! empty($tenantSettings['school_logo_url'])) {
             $logoPath = $tenantSettings['school_logo_url'];
             if (str_starts_with($logoPath, 'storage/')) {
                 $logoUrl = asset($logoPath);
@@ -349,8 +353,8 @@ class IdCardOrderController extends Controller
                 'address' => $tenantSettings['school_address'] ?? 'Alamat Belum Diatur',
                 'principal_name' => $tenantSettings['principal_name'] ?? 'Nama Kepala Sekolah',
                 'principal_nip' => $tenantSettings['principal_nip'] ?? '-',
-                'logo_url' => $logoUrl
-            ]
+                'logo_url' => $logoUrl,
+            ],
         ]);
     }
 }

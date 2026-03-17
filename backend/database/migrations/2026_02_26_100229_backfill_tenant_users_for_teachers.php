@@ -24,12 +24,12 @@ return new class extends Migration
                 ->where('tenant_id', $teacher->tenant_id)
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('tenant_users')->insert([
-                    'tenant_id'  => $teacher->tenant_id,
-                    'user_id'    => $teacher->user_id,
-                    'role'       => 'teacher',
-                    'is_active'  => true,
+                    'tenant_id' => $teacher->tenant_id,
+                    'user_id' => $teacher->user_id,
+                    'role' => 'teacher',
+                    'is_active' => true,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);

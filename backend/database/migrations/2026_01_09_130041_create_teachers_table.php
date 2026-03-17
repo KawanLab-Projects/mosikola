@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('teachers', function (Blueprint $table) {
             $table->id();
-            $table->uuid("public_id")->default(DB::raw('gen_random_uuid()'));
+            $table->uuid('public_id')->default(DB::raw('gen_random_uuid()'));
             $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('nip')->unique();
             $table->string('name');

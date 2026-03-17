@@ -2,14 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Mail\RegistrationApproved;
 use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\TenantRegistration;
 use App\Models\User;
-use App\Mail\RegistrationApproved;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -46,7 +45,7 @@ class TenantRegistrationApprovalTest extends TestCase
             'code' => 'basic',
             'student_limit' => 100,
             'price' => 0,
-            'is_active' => true
+            'is_active' => true,
         ]);
 
         $registration = TenantRegistration::create([
@@ -55,7 +54,7 @@ class TenantRegistrationApprovalTest extends TestCase
             'email' => 'pic@test.com',
             'contact_person' => 'PIC Name',
             'plan_id' => $plan->id,
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
 
         $user = User::factory()->create();
@@ -72,13 +71,13 @@ class TenantRegistrationApprovalTest extends TestCase
         $this->assertDatabaseHas('tenants', [
             'name' => 'Test School',
             'slug' => 'test-school',
-            'email' => 'pic@test.com'
+            'email' => 'pic@test.com',
         ]);
 
         // Verify User creation
         $this->assertDatabaseHas('users', [
             'email' => 'pic@test.com',
-            'name' => 'PIC Name'
+            'name' => 'PIC Name',
         ]);
 
         $newUser = User::where('email', 'pic@test.com')->first();
@@ -98,7 +97,7 @@ class TenantRegistrationApprovalTest extends TestCase
             'slug' => 'processed',
             'email' => 'pic@processed.com',
             'contact_person' => 'PIC',
-            'status' => 'approved'
+            'status' => 'approved',
         ]);
 
         $user = User::factory()->create();

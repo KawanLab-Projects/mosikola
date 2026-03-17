@@ -15,6 +15,7 @@ class AttendanceTokenService
 
         if ($lastToken->expires_at <= Carbon::now()) {
             $this->attendanceTokenRepo->removeOldTokens();
+
             return $this->attendanceTokenRepo->generateToken();
         }
 

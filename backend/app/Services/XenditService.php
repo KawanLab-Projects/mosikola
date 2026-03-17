@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 class XenditService
 {
     protected string $baseUrl = 'https://api.xendit.co';
+
     protected string $secretKey;
 
     public function __construct()
@@ -32,12 +33,13 @@ class XenditService
      *   items?: array,
      * } $params
      * @return array Xendit invoice object
+     *
      * @throws \RuntimeException on API failure
      */
     public function createInvoice(array $params): array
     {
         $payload = array_merge([
-            'currency'   => 'IDR',
+            'currency' => 'IDR',
             'should_send_email' => true,
         ], $params);
 
@@ -46,12 +48,12 @@ class XenditService
 
         if ($response->failed()) {
             Log::error('[XenditService] createInvoice failed', [
-                'status'  => $response->status(),
-                'body'    => $response->body(),
+                'status' => $response->status(),
+                'body' => $response->body(),
                 'payload' => $params,
             ]);
             throw new \RuntimeException(
-                'Gagal membuat invoice Xendit: ' . ($response->json('message') ?? $response->body())
+                'Gagal membuat invoice Xendit: '.($response->json('message') ?? $response->body())
             );
         }
 
@@ -67,7 +69,7 @@ class XenditService
             ->get("{$this->baseUrl}/v2/invoices/{$invoiceId}");
 
         if ($response->failed()) {
-            throw new \RuntimeException('Gagal mengambil invoice Xendit: ' . $response->body());
+            throw new \RuntimeException('Gagal mengambil invoice Xendit: '.$response->body());
         }
 
         return $response->json();

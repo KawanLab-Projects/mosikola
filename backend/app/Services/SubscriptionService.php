@@ -18,7 +18,7 @@ class SubscriptionService
     {
         $plan = $this->planRepo->findByCode('gratis');
 
-        if (!$plan) {
+        if (! $plan) {
             throw new Exception("Plan 'gratis' tidak ditemukan. Pastikan seeder sudah dijalankan.");
         }
 

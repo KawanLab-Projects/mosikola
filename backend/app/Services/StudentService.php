@@ -2,21 +2,19 @@
 
 namespace App\Services;
 
-use App\Models\User;
-use App\Repositories\StudentRepository;
-use App\Repositories\ClassroomRepository;
-use App\Repositories\UserRepository;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Facades\DB;
 use App\Imports\StudentImport;
 use App\Models\Student;
 use App\Models\Tenant;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Repositories\ClassroomRepository;
+use App\Repositories\StudentRepository;
+use App\Repositories\UserRepository;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StudentService
 {
-
     public function __construct(
         private UserRepository $userRepo,
         private StudentRepository $studentRepo,
@@ -30,7 +28,7 @@ class StudentService
     ): void {
         $classroom = $this->classroomRepo->getByPublicId($classroomPublicId);
 
-        if (!$classroom) {
+        if (! $classroom) {
             throw new ModelNotFoundException('Classroom not found');
         }
 
@@ -42,7 +40,7 @@ class StudentService
 
     public function createWithUser(array $data)
     {
-        if (!empty($data['tenant_id'])) {
+        if (! empty($data['tenant_id'])) {
             $tenant = Tenant::find($data['tenant_id']);
             if ($tenant) {
                 $subscription = $tenant->subscriptions()->with('plan')->where('is_active', true)->first();
@@ -62,20 +60,20 @@ class StudentService
             $birthDate = $this->normalizeDate($data['birth_date'] ?? null);
 
             $user = $this->userRepo->create([
-                'name'     => $data['nisn'],
-                'email'    => $data['nisn'] . '@mosikola.com',
+                'name' => $data['nisn'],
+                'email' => $data['nisn'].'@mosikola.com',
                 'password' => bcrypt($data['nisn']),
             ], 'student');
 
             return $this->studentRepo->create([
-                'user_id'      => $user->id,
-                'tenant_id'    => $data['tenant_id'] ?? null,
-                'nisn'         => $data['nisn'],
-                'name'         => $data['name'],
-                'address'      => $data['address'] ?? null,
-                'birth_place'  => $data['birth_place'] ?? null,
-                'birth_date'   => $birthDate,
-                'parent_name'  => $data['parent_name'] ?? null,
+                'user_id' => $user->id,
+                'tenant_id' => $data['tenant_id'] ?? null,
+                'nisn' => $data['nisn'],
+                'name' => $data['name'],
+                'address' => $data['address'] ?? null,
+                'birth_place' => $data['birth_place'] ?? null,
+                'birth_date' => $birthDate,
+                'parent_name' => $data['parent_name'] ?? null,
                 'parent_phone' => $data['parent_phone'] ?? null,
                 'classroom_id' => $data['classroom_id'],
             ]);
@@ -85,6 +83,7 @@ class StudentService
     public function getStudentsByClassroom(string $classroomPublicId)
     {
         $classroom = $this->classroomRepo->getByPublicId($classroomPublicId);
+
         return $this->studentRepo->getByClassroomId($classroom->id);
     }
 
@@ -106,12 +105,12 @@ class StudentService
     public function create(string $classroomPublicId, array $data, ?int $tenantId = null): Student
     {
         $classroom = $this->classroomRepo->getByPublicId($classroomPublicId);
-        if (!$classroom) {
-            throw new ModelNotFoundException("Classroom not found");
+        if (! $classroom) {
+            throw new ModelNotFoundException('Classroom not found');
         }
 
         $data['classroom_id'] = $classroom->id;
-        $data['tenant_id']    = $tenantId;
+        $data['tenant_id'] = $tenantId;
 
         return $this->createWithUser($data);
     }
@@ -119,8 +118,8 @@ class StudentService
     public function update(string $publicId, array $data): Student
     {
         $student = $this->getByPublicId($publicId);
-        if (!$student) {
-            throw new ModelNotFoundException("Student not found");
+        if (! $student) {
+            throw new ModelNotFoundException('Student not found');
         }
 
         if (isset($data['birth_date'])) {
@@ -132,7 +131,9 @@ class StudentService
 
     private function normalizeDate($date)
     {
-        if (!$date) return null;
+        if (! $date) {
+            return null;
+        }
         if (is_numeric($date)) {
             // Likely Excel timestamp
             try {
@@ -156,8 +157,8 @@ class StudentService
     public function delete(string $publicId): void
     {
         $student = $this->getByPublicId($publicId);
-        if (!$student) {
-            throw new ModelNotFoundException("Student not found");
+        if (! $student) {
+            throw new ModelNotFoundException('Student not found');
         }
 
         $this->studentRepo->delete($student);

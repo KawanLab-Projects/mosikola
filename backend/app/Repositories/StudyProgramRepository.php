@@ -43,6 +43,7 @@ class StudyProgramRepository implements StudyProgramRepoInterface
     {
         $studyProgram = StudyProgram::findOrFail($id);
         $studyProgram->update($data);
+
         return true;
     }
 

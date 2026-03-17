@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\ScheduleGeneratorService;
-use App\Repositories\ScheduleGeneratorRepository;
 use App\Models\AcademicYear;
+use App\Repositories\ScheduleGeneratorRepository;
+use App\Services\ScheduleGeneratorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -18,7 +18,8 @@ class ScheduleGeneratorController extends Controller
     private function resolveTenantId(Request $request): int
     {
         $tenantUser = $request->user()->tenantUsers()->where('is_active', true)->first();
-        abort_if(!$tenantUser, 403, 'Akses ditolak.');
+        abort_if(! $tenantUser, 403, 'Akses ditolak.');
+
         return $tenantUser->tenant_id;
     }
 
@@ -32,7 +33,7 @@ class ScheduleGeneratorController extends Controller
             'academic_year_id' => 'required|integer|exists:academic_years,id',
         ]);
 
-        $tenantId      = $this->resolveTenantId($request);
+        $tenantId = $this->resolveTenantId($request);
         $academicYearId = (int) $request->input('academic_year_id');
 
         $year = AcademicYear::find($academicYearId);
@@ -42,10 +43,10 @@ class ScheduleGeneratorController extends Controller
 
         return response()->json([
             'data' => [
-                'total'            => count($result['assigned']),
+                'total' => count($result['assigned']),
                 'unresolved_count' => count($result['unresolved']),
-                'unresolved'       => $result['unresolved'],
-                'preview'          => $result['assigned'],
+                'unresolved' => $result['unresolved'],
+                'preview' => $result['assigned'],
             ],
         ]);
     }
@@ -60,7 +61,7 @@ class ScheduleGeneratorController extends Controller
             'academic_year_id' => 'required|integer|exists:academic_years,id',
         ]);
 
-        $tenantId      = $this->resolveTenantId($request);
+        $tenantId = $this->resolveTenantId($request);
         $academicYearId = (int) $request->input('academic_year_id');
 
         $year = AcademicYear::find($academicYearId);
@@ -73,10 +74,10 @@ class ScheduleGeneratorController extends Controller
 
         return response()->json([
             'message' => 'Jadwal berhasil disimpan.',
-            'data'    => [
-                'total'            => count($result['assigned']),
+            'data' => [
+                'total' => count($result['assigned']),
                 'unresolved_count' => count($result['unresolved']),
-                'unresolved'       => $result['unresolved'],
+                'unresolved' => $result['unresolved'],
             ],
         ]);
     }

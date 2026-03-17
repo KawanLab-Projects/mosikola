@@ -23,7 +23,7 @@ class AttendanceController extends Controller
             ->where('expires_at', '>', now())
             ->first();
 
-        if (!$tokenRecord) {
+        if (! $tokenRecord) {
             return response()->json(['message' => 'Invalid or expired Attendance Token'], 422);
         }
 
@@ -34,7 +34,7 @@ class AttendanceController extends Controller
         }
 
         return response()->json([
-            'data' => $record
+            'data' => $record,
         ]);
     }
 

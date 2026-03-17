@@ -31,7 +31,9 @@ class IdCardOrderItem extends Model
 
     public function getPhotoUrlAttribute()
     {
-        if (empty($this->photo_path)) return null;
+        if (empty($this->photo_path)) {
+            return null;
+        }
 
         // If it was uploaded before R2 migration, it starts with 'storage/'
         if (str_starts_with($this->photo_path, 'storage/')) {

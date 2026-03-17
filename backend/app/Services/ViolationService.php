@@ -20,8 +20,8 @@ class ViolationService
     {
         return $this->repo->create([
             'tenant_id' => $tenantId,
-            'name'      => $data['name'],
-            'points'    => $data['points'],
+            'name' => $data['name'],
+            'points' => $data['points'],
         ]);
     }
 
@@ -30,7 +30,7 @@ class ViolationService
     {
         $violation = $this->repo->getById($id);
 
-        abort_if(!$violation, 404, 'Jenis pelanggaran tidak ditemukan.');
+        abort_if(! $violation, 404, 'Jenis pelanggaran tidak ditemukan.');
         abort_if($violation->tenant_id !== $tenantId, 403, 'Akses ditolak.');
 
         return $violation;

@@ -1,38 +1,38 @@
 <?php
 
 use App\Http\Controllers\AcademicYearController;
-use App\Http\Controllers\AttendanceController;
-use App\Http\Controllers\AttendanceTokenController;
-use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\ClassroomController;
-use App\Http\Controllers\StudentController;
-use App\Http\Controllers\StudyProgramController;
-use App\Http\Controllers\ScheduleImportController;
-use App\Http\Controllers\SubjectController;
-use App\Http\Controllers\SuperadminTenantController;
-use App\Http\Controllers\TeacherController;
-use App\Http\Controllers\TenantRegistrationController;
-use App\Http\Controllers\JournalMonitoringController;
-use App\Http\Controllers\LessonJournalController;
-use App\Http\Controllers\TenantSettingController;
-use App\Http\Controllers\SchoolPeriodController;
-use App\Http\Controllers\CurriculumItemController;
-use App\Http\Controllers\TeacherUnavailabilityController;
-use App\Http\Controllers\ScheduleGeneratorController;
-use App\Http\Controllers\Superadmin\IdCardTemplateController;
-use App\Http\Controllers\Superadmin\IdCardFulfillmentController;
-use App\Http\Controllers\Superadmin\N8nSettingController;
-use App\Http\Controllers\Superadmin\AiSettingController;
-use App\Http\Controllers\Superadmin\XenditSettingController;
+use App\Http\Controllers\AiCounselingController;
 use App\Http\Controllers\API\AdminAttendanceController;
 use App\Http\Controllers\API\AttendanceController as ApiAttendanceController;
 use App\Http\Controllers\API\AttendanceTokenController as ApiAttendanceTokenController;
 use App\Http\Controllers\API\IdCardOrderController;
+use App\Http\Controllers\API\TenantBillingController;
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\AttendanceTokenController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\ClassroomController;
+use App\Http\Controllers\CurriculumItemController;
 use App\Http\Controllers\Dashboard\SuperadminDashboardController;
+use App\Http\Controllers\JournalMonitoringController;
+use App\Http\Controllers\LessonJournalController;
+use App\Http\Controllers\ScheduleGeneratorController;
+use App\Http\Controllers\ScheduleImportController;
+use App\Http\Controllers\SchoolPeriodController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\StudyProgramController;
+use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\Superadmin\AiSettingController;
+use App\Http\Controllers\Superadmin\IdCardFulfillmentController;
+use App\Http\Controllers\Superadmin\IdCardTemplateController;
+use App\Http\Controllers\Superadmin\N8nSettingController;
 use App\Http\Controllers\SuperAdmin\PlanController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
-use App\Http\Controllers\AiCounselingController;
-use App\Http\Controllers\API\TenantBillingController;
+use App\Http\Controllers\Superadmin\XenditSettingController;
+use App\Http\Controllers\SuperadminTenantController;
+use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\TeacherUnavailabilityController;
+use App\Http\Controllers\TenantRegistrationController;
+use App\Http\Controllers\TenantSettingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -91,14 +91,13 @@ Route::get('plans', function () {
                 'early_bird_limit',
                 'student_limit',
                 'teacher_limit',
-                'features'
-            ])
+                'features',
+            ]),
     ]);
 });
 
-
 Route::get('download-template', [ClassroomController::class, 'downloadTemplate'])->middleware('api');
-Route::middleware("auth:sanctum")->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     Route::post('auth/verifyToken', [AuthController::class, 'verifyToken']);
     Route::post('auth/logout', [AuthController::class, 'logout']);
     Route::get('auth/me', function (Request $request, \App\Services\TenantSettingService $tenantSettingService) {
@@ -225,12 +224,12 @@ Route::middleware("auth:sanctum")->group(function () {
 
     // Discipline & Violations
     Route::apiResource('violations', \App\Http\Controllers\ViolationController::class);
-    Route::post('student-violations/bulk', \App\Http\Controllers\StudentViolationController::class . '@bulkStore');
+    Route::post('student-violations/bulk', \App\Http\Controllers\StudentViolationController::class.'@bulkStore');
     Route::apiResource('student-violations', \App\Http\Controllers\StudentViolationController::class);
 
     // Positive Behaviors
     Route::apiResource('positive-behaviors', \App\Http\Controllers\PositiveBehaviorController::class);
-    Route::post('student-positive-behaviors/bulk', \App\Http\Controllers\StudentPositiveBehaviorController::class . '@bulkStore');
+    Route::post('student-positive-behaviors/bulk', \App\Http\Controllers\StudentPositiveBehaviorController::class.'@bulkStore');
     Route::apiResource('student-positive-behaviors', \App\Http\Controllers\StudentPositiveBehaviorController::class);
 
     // Bimbingan Konseling (BK)

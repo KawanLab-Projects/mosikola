@@ -13,7 +13,8 @@ class ViolationController extends Controller
     private function resolveTenantId(Request $request): int
     {
         $tenantUser = $request->user()->tenantUsers()->where('is_active', true)->first();
-        abort_if(!$tenantUser, 403, 'Akses ditolak.');
+        abort_if(! $tenantUser, 403, 'Akses ditolak.');
+
         return $tenantUser->tenant_id;
     }
 
@@ -29,7 +30,7 @@ class ViolationController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'   => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'points' => 'required|integer|min:0',
         ]);
 
@@ -37,7 +38,7 @@ class ViolationController extends Controller
 
         return response()->json([
             'message' => 'Jenis pelanggaran berhasil ditambahkan.',
-            'data'    => $violation,
+            'data' => $violation,
         ], 201);
     }
 
@@ -55,16 +56,16 @@ class ViolationController extends Controller
         $tenantId = $this->resolveTenantId($request);
 
         $validated = $request->validate([
-            'name'   => 'sometimes|string|max:255',
+            'name' => 'sometimes|string|max:255',
             'points' => 'sometimes|integer|min:0',
         ]);
 
         $violation = $this->service->findOrFail403($violation->id, $tenantId);
-        $updated   = $this->service->update($violation, $validated);
+        $updated = $this->service->update($violation, $validated);
 
         return response()->json([
             'message' => 'Jenis pelanggaran berhasil diperbarui.',
-            'data'    => $updated,
+            'data' => $updated,
         ]);
     }
 

@@ -7,7 +7,7 @@ use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class StudentTemplateExport implements FromArray, WithHeadings, WithColumnFormatting
+class StudentTemplateExport implements FromArray, WithColumnFormatting, WithHeadings
 {
     public function headings(): array
     {
@@ -42,7 +42,7 @@ class StudentTemplateExport implements FromArray, WithHeadings, WithColumnFormat
                 'Jl. Pahlawan No. 45, Bandung',
                 'Ahmad Suryadi',
                 '085612345678',
-            ]
+            ],
         ];
     }
 

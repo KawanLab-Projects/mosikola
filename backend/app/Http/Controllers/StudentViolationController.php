@@ -10,7 +10,8 @@ class StudentViolationController extends Controller
     private function getTenantId(Request $request)
     {
         $tenantUser = $request->user()->tenantUsers()->where('is_active', true)->first();
-        abort_if(!$tenantUser, 403, 'Akses ditolak.');
+        abort_if(! $tenantUser, 403, 'Akses ditolak.');
+
         return $tenantUser->tenant_id;
     }
 
@@ -27,7 +28,7 @@ class StudentViolationController extends Controller
             ->get();
 
         return response()->json([
-            'data' => $violations
+            'data' => $violations,
         ]);
     }
 
@@ -55,7 +56,7 @@ class StudentViolationController extends Controller
         }
         $student = $studentQuery->first();
 
-        if (!$student) {
+        if (! $student) {
             return response()->json(['message' => 'Siswa tidak ditemukan.'], 404);
         }
 
@@ -78,7 +79,7 @@ class StudentViolationController extends Controller
 
         return response()->json([
             'message' => 'Catatan pelanggaran berhasil disimpan.',
-            'data' => $violationRecord
+            'data' => $violationRecord,
         ], 201);
     }
 
@@ -91,11 +92,11 @@ class StudentViolationController extends Controller
         $userId = $request->user()->id;
 
         $validated = $request->validate([
-            'student_ids'   => 'required|array|min:1',
+            'student_ids' => 'required|array|min:1',
             'student_ids.*' => 'required', // public_id or id
-            'violation_id'  => 'required|exists:violations,id',
-            'date'          => 'required|date',
-            'notes'         => 'nullable|string',
+            'violation_id' => 'required|exists:violations,id',
+            'date' => 'required|date',
+            'notes' => 'nullable|string',
         ]);
 
         $uuids = [];
@@ -128,14 +129,14 @@ class StudentViolationController extends Controller
         foreach ($students as $student) {
             if ($student->tenant_id === $tenantId) {
                 $records[] = [
-                    'tenant_id'           => $tenantId,
-                    'student_id'          => $student->id,
-                    'violation_id'        => $validated['violation_id'],
-                    'date'                => $validated['date'],
-                    'notes'               => $validated['notes'] ?? null,
+                    'tenant_id' => $tenantId,
+                    'student_id' => $student->id,
+                    'violation_id' => $validated['violation_id'],
+                    'date' => $validated['date'],
+                    'notes' => $validated['notes'] ?? null,
                     'recorded_by_user_id' => $userId,
-                    'created_at'          => $now,
-                    'updated_at'          => $now,
+                    'created_at' => $now,
+                    'updated_at' => $now,
                 ];
                 $insertedCount++;
             }
@@ -143,8 +144,9 @@ class StudentViolationController extends Controller
 
         if ($insertedCount > 0) {
             StudentViolation::insert($records);
+
             return response()->json([
-                'message' => "Berhasil mencatat $insertedCount pelanggaran."
+                'message' => "Berhasil mencatat $insertedCount pelanggaran.",
             ], 201);
         }
 
@@ -165,7 +167,7 @@ class StudentViolationController extends Controller
         $studentViolation->delete();
 
         return response()->json([
-            'message' => 'Catatan pelanggaran berhasil dihapus.'
+            'message' => 'Catatan pelanggaran berhasil dihapus.',
         ]);
     }
 }

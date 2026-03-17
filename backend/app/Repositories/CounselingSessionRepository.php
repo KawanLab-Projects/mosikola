@@ -42,6 +42,7 @@ class CounselingSessionRepository
     {
         $session = $this->find($id);
         $session->update($data);
+
         return $session;
     }
 
@@ -51,6 +52,7 @@ class CounselingSessionRepository
     public function delete($id)
     {
         $session = $this->find($id);
+
         return $session->delete();
     }
 }

@@ -14,10 +14,10 @@ return new class extends Migration
     {
         Schema::create('classrooms', function (Blueprint $table) {
             $table->id();
-            $table->uuid("public_id")->default(DB::raw('gen_random_uuid()'));
+            $table->uuid('public_id')->default(DB::raw('gen_random_uuid()'));
             $table->string('name');
             $table->foreignId('study_program_id')->references('id')->on('study_programs')->onDelete('cascade');
-            $table->string("short");
+            $table->string('short');
             $table->tinyInteger('grade_level'); // SD/MI: 1-6, SMP/MTS: 7-9, SMA/SMK: 10-12
             $table->timestamps();
         });

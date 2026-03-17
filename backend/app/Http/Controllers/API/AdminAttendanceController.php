@@ -11,7 +11,8 @@ class AdminAttendanceController extends Controller
     private function getTenantId(Request $request)
     {
         $tenantUser = $request->user()->tenantUsers()->where('is_active', true)->first();
-        abort_if(!$tenantUser, 403, 'Akses ditolak.');
+        abort_if(! $tenantUser, 403, 'Akses ditolak.');
+
         return $tenantUser->tenant_id;
     }
 
@@ -34,7 +35,7 @@ class AdminAttendanceController extends Controller
         $attendances = $query->orderBy('attended_at', 'desc')->get();
 
         return response()->json([
-            'data' => $attendances
+            'data' => $attendances,
         ]);
     }
 }

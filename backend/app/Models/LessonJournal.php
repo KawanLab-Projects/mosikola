@@ -22,9 +22,9 @@ class LessonJournal extends Model
     ];
 
     protected $casts = [
-        'date'      => 'date',
+        'date' => 'date',
         'filled_at' => 'datetime',
-        'photos'    => 'array',
+        'photos' => 'array',
     ];
 
     public function schedule(): BelongsTo

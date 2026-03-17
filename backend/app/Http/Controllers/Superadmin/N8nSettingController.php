@@ -3,12 +3,10 @@
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
 use App\Models\GlobalSetting;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Validator;
 use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class N8nSettingController extends Controller
 {
@@ -18,6 +16,7 @@ class N8nSettingController extends Controller
     public function index()
     {
         $settings = GlobalSetting::where('key', 'like', 'n8n_webhook_%')->get();
+
         return response()->json([
             'status' => 'success',
             'data' => $settings->pluck('value', 'key'),
@@ -69,18 +68,18 @@ class N8nSettingController extends Controller
             if ($response->successful()) {
                 return response()->json([
                     'status' => 'success',
-                    'message' => 'Webhook berhasil dipanggil (Status: ' . $response->status() . ').',
+                    'message' => 'Webhook berhasil dipanggil (Status: '.$response->status().').',
                 ]);
             }
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Webhook merespons dengan error (Status: ' . $response->status() . ').',
+                'message' => 'Webhook merespons dengan error (Status: '.$response->status().').',
             ], 400);
         } catch (Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gagal memanggil webhook: ' . $e->getMessage(),
+                'message' => 'Gagal memanggil webhook: '.$e->getMessage(),
             ], 500);
         }
     }

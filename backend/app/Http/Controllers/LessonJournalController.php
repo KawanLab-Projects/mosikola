@@ -15,7 +15,7 @@ class LessonJournalController extends Controller
     public function teacherSchedules(Request $request): JsonResponse
     {
         $teacher = $this->service->resolveTeacher($request->user()->id);
-        abort_if(!$teacher, 403, 'Akun ini tidak terhubung ke data guru.');
+        abort_if(! $teacher, 403, 'Akun ini tidak terhubung ke data guru.');
 
         $schedules = $this->service->getTeacherSchedules(
             $teacher->id,
@@ -41,15 +41,15 @@ class LessonJournalController extends Controller
     public function store(Request $request): JsonResponse
     {
         $teacher = $this->service->resolveTeacher($request->user()->id);
-        abort_if(!$teacher, 403, 'Akun ini tidak terhubung ke data guru.');
+        abort_if(! $teacher, 403, 'Akun ini tidak terhubung ke data guru.');
 
         $data = $request->validate([
             'schedule_id' => 'required|integer|exists:schedules,id',
-            'date'        => 'required|date_format:Y-m-d',
-            'room'        => 'nullable|string|max:100',
-            'topic'       => 'nullable|string|max:500',
-            'notes'       => 'nullable|string',
-            'homework'    => 'nullable|string',
+            'date' => 'required|date_format:Y-m-d',
+            'room' => 'nullable|string|max:100',
+            'topic' => 'nullable|string|max:500',
+            'notes' => 'nullable|string',
+            'homework' => 'nullable|string',
         ]);
 
         $journal = $this->service->createJournal($teacher->id, $data);
@@ -62,12 +62,12 @@ class LessonJournalController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $teacher = $this->service->resolveTeacher($request->user()->id);
-        abort_if(!$teacher, 403, 'Akun ini tidak terhubung ke data guru.');
+        abort_if(! $teacher, 403, 'Akun ini tidak terhubung ke data guru.');
 
         $data = $request->validate([
-            'room'     => 'nullable|string|max:100',
-            'topic'    => 'nullable|string|max:500',
-            'notes'    => 'nullable|string',
+            'room' => 'nullable|string|max:100',
+            'topic' => 'nullable|string|max:500',
+            'notes' => 'nullable|string',
             'homework' => 'nullable|string',
         ]);
 
@@ -90,13 +90,13 @@ class LessonJournalController extends Controller
     public function storeAttendances(Request $request, int $journalId): JsonResponse
     {
         $teacher = $this->service->resolveTeacher($request->user()->id);
-        abort_if(!$teacher, 403, 'Akun ini tidak terhubung ke data guru.');
+        abort_if(! $teacher, 403, 'Akun ini tidak terhubung ke data guru.');
 
         $request->validate([
-            'attendances'              => 'required|array',
+            'attendances' => 'required|array',
             'attendances.*.student_id' => 'required|integer|exists:students,id',
-            'attendances.*.status'     => 'required|in:hadir,sakit,izin,alpha',
-            'attendances.*.notes'      => 'nullable|string',
+            'attendances.*.status' => 'required|in:hadir,sakit,izin,alpha',
+            'attendances.*.notes' => 'nullable|string',
         ]);
 
         $this->service->saveAttendances($teacher->id, $journalId, $request->attendances);
