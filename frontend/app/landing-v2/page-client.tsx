@@ -167,7 +167,7 @@ export default function LandingPageV2Client() {
 
                             <motion.div variants={itemVariants} className="flex items-center justify-center gap-2 pt-6 text-muted-foreground font-medium text-sm">
                                 <Smartphone className="w-5 h-5 text-primary" />
-                                <span>Sudah Termasuk Aplikasi Mobile iOS & Android</span>
+                                <span>Download di Play Store</span>
                             </motion.div>
                         </motion.div>
                     </div>

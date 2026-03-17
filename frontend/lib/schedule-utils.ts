@@ -59,8 +59,9 @@ export function computeAdjustedTimes(
     const [h, m] = period1StartTime.split(":").map(Number)
     const base = h * 60 + m
 
-    const adjStart = base + (periodStart - 1) * newDurationMinutes
-    const adjEnd = adjStart + (periodEnd - periodStart + 1) * newDurationMinutes
+    // For period 1, start is exactly base
+    const adjStart = base + ((periodStart - 1) * newDurationMinutes)
+    const adjEnd = adjStart + ((periodEnd - periodStart + 1) * newDurationMinutes)
 
     return {
         start_time: minutesToHHMM(adjStart),
@@ -69,9 +70,9 @@ export function computeAdjustedTimes(
 }
 
 function minutesToHHMM(totalMinutes: number): string {
-    const hh = Math.floor(totalMinutes / 60).toString().padStart(2, "0")
-    const mm = (totalMinutes % 60).toString().padStart(2, "0")
-    return `${hh}:${mm}`
+    const hh = Math.floor(totalMinutes / 60) % 24
+    const mm = totalMinutes % 60
+    return `${hh.toString().padStart(2, "0")}:${mm.toString().padStart(2, "0")}:00`
 }
 
 /**

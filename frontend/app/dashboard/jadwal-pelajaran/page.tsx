@@ -963,7 +963,7 @@ export default function JadwalPelajaranPage() {
                                                                                     defaultPeriodDuration,
                                                                                     shortenedDay.duration_minutes
                                                                                 )
-                                                                                : { start_time: s.start_time, end_time: s.end_time }
+                                                                                : { start_time: s.start_time.slice(0, 5), end_time: s.end_time.slice(0, 5) }
 
                                                                             let StatusBadge = null
                                                                             let borderColor = "border-border"
@@ -1014,8 +1014,8 @@ export default function JadwalPelajaranPage() {
                                                                                         <div className="flex justify-between items-center text-xs text-muted-foreground bg-muted/30 p-1.5 rounded-md">
                                                                                             <span>{s.classroom?.name}</span>
                                                                                             <span className={cn("font-medium", shortenedDay && "text-amber-600 dark:text-amber-400")}>
-                                                                                                {displayTimes.start_time} - {displayTimes.end_time}
-                                                                                                {shortenedDay && <span className="ml-1 opacity-60 line-through text-[10px]">{s.start_time} - {s.end_time}</span>}
+                                                                                                {displayTimes.start_time.slice(0, 5)} - {displayTimes.end_time.slice(0, 5)}
+                                                                                                {shortenedDay && <span className="ml-1 opacity-60 line-through text-[10px]">{s.start_time.slice(0, 5)} - {s.end_time.slice(0, 5)}</span>}
                                                                                             </span>
                                                                                         </div>
                                                                                         {hasJournal && s.journal?.topic && (
