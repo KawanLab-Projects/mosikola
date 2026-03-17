@@ -751,6 +751,7 @@ export default function TemplateEditorPage() {
                                                 }}
                                                 className="bg-slate-200 dark:bg-slate-800"
                                             >
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img
                                                     src={MOCK_STUDENT.photo}
                                                     alt="Photo Area"

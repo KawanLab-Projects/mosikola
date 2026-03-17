@@ -7,8 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
+interface User {
+    id?: number | string;
+    name: string;
+    email: string;
+    role?: string;
+}
+
 interface DashboardData {
-    user: any;
+    user: User;
     features: string[];
     plan: {
         name: string;

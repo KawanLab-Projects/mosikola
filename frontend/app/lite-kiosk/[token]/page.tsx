@@ -259,7 +259,7 @@ export default function LiteKioskTokenPage() {
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [nfcInput, processNfcScan]);
+    }, [nfcInput, processNfcScan, triggerReset]);
 
     return (
         <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">

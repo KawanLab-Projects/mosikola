@@ -72,7 +72,7 @@ export default function QrScanner({
                 }
             }
         };
-    }, [facingMode, onScan]);
+    }, [facingMode, onScan, id]);
 
     return <div id={id} className="w-full h-full" />
 }

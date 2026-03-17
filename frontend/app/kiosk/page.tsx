@@ -49,7 +49,6 @@ export default function KioskPage() {
     const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
     const outboxRef = useRef(outbox);
     const [inactivityTimeoutMinutes, setInactivityTimeoutMinutes] = useState(20);
-    const [schoolStartTime, setSchoolStartTime] = useState("07:00");
     const [schoolEndTime, setSchoolEndTime] = useState("14:00");
 
     // Setup mode states
@@ -93,14 +92,12 @@ export default function KioskPage() {
 
             // Auto-update settings if provided
             if (response.data.settings) {
-                const { inactivity_timeout_minutes, school_start_time, school_end_time } = response.data.settings;
+                const { inactivity_timeout_minutes, school_end_time } = response.data.settings;
                 if (inactivity_timeout_minutes) setInactivityTimeoutMinutes(Number(inactivity_timeout_minutes));
-                if (school_start_time) setSchoolStartTime(school_start_time);
                 if (school_end_time) setSchoolEndTime(school_end_time);
                 
                 localStorage.setItem("mosikola_kiosk_settings", JSON.stringify({ 
                     timeout: inactivity_timeout_minutes, 
-                    start: school_start_time, 
                     end: school_end_time 
                 }));
             }
@@ -159,7 +156,7 @@ export default function KioskPage() {
         if (isIdleMode && outbox.length > 0 && kioskToken) {
             syncOutbox(kioskToken, outbox);
         }
-    }, [isIdleMode, outbox.length, kioskToken, syncOutbox]);
+    }, [isIdleMode, outbox, kioskToken, syncOutbox]);
 
     const recordOfflineAttendance = useCallback((student: Student, method: "nfc" | "barcode" | "offline") => {
         // Wake from idle immediately
@@ -219,14 +216,12 @@ export default function KioskPage() {
                 setIsSetupMode(false);
                 
                 const timeout = response.data.inactivity_timeout_minutes ? Number(response.data.inactivity_timeout_minutes) : 20;
-                const start = response.data.school_start_time || "07:00";
                 const end = response.data.school_end_time || "14:00";
 
                 setInactivityTimeoutMinutes(timeout);
-                setSchoolStartTime(start);
                 setSchoolEndTime(end);
 
-                localStorage.setItem("mosikola_kiosk_settings", JSON.stringify({ timeout, start, end }));
+                localStorage.setItem("mosikola_kiosk_settings", JSON.stringify({ timeout, end }));
 
                 resetIdleTimer(timeout);
                 fetchToken(token);
@@ -301,9 +296,8 @@ export default function KioskPage() {
 
             const savedSettings = localStorage.getItem("mosikola_kiosk_settings");
             if (savedSettings) {
-                const { timeout, start, end } = JSON.parse(savedSettings);
+                const { timeout, end } = JSON.parse(savedSettings);
                 setInactivityTimeoutMinutes(timeout || 20);
-                setSchoolStartTime(start || "07:00");
                 setSchoolEndTime(end || "14:00");
                 resetIdleTimer(timeout || 20);
             }

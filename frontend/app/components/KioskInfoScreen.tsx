@@ -31,6 +31,14 @@ interface Props {
     miniContent: React.ReactNode; // QR + camera slot
 }
 
+const QUOTES = [
+    "Disiplin adalah jembatan antara tujuan dan pencapaian.",
+    "Kehadiran tepat waktu adalah tanda menghargai diri sendiri.",
+    "Karakter dibangun dari kebiasaan sehari-hari.",
+    "Kedisiplinan hari ini menciptakan kebebasan masa depan.",
+    "Hadir, semangat, dan jadilah yang terbaik hari ini!",
+];
+
 export default function KioskInfoScreen({
     recentScans,
     outboxCount,
@@ -40,14 +48,6 @@ export default function KioskInfoScreen({
     const [now, setNow] = useState(new Date());
     const [corner, setCorner] = useState<Corner>("br");
     const [quoteIdx, setQuoteIdx] = useState(0);
-
-    const QUOTES = [
-        "Disiplin adalah jembatan antara tujuan dan pencapaian.",
-        "Kehadiran tepat waktu adalah tanda menghargai diri sendiri.",
-        "Karakter dibangun dari kebiasaan sehari-hari.",
-        "Kedisiplinan hari ini menciptakan kebebasan masa depan.",
-        "Hadir, semangat, dan jadilah yang terbaik hari ini!",
-    ];
 
     useEffect(() => {
         const timer = setInterval(() => setNow(new Date()), 1000);
@@ -247,7 +247,7 @@ export default function KioskInfoScreen({
                     title="Klik untuk pindah posisi"
                 >
                     {/* Reposition indicator */}
-                    <div className="absolute inset-0 rounded-2xl ring-2 ring-blue-500/0 group-hover:ring-blue-500/40 transition-all duration-200 pointer-events-none z-10 rounded-2xl" />
+                    <div className="absolute inset-0 rounded-2xl ring-2 ring-blue-500/0 group-hover:ring-blue-500/40 transition-all duration-200 pointer-events-none z-10" />
                     <div className="absolute -top-2 -right-2 w-5 h-5 bg-slate-800 border border-slate-700 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20 text-slate-400">
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                             <path d="m5 9-3 3 3 3" /><path d="m19 9 3 3-3 3" /><path d="M2 12h20" /><path d="m9 5 3-3 3 3" /><path d="m9 19 3 3 3-3" /><path d="M12 2v20" />

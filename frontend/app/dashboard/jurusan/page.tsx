@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Pencil, Trash2, Search, X } from "lucide-react"
+import { Plus, Pencil, Trash2, Search } from "lucide-react"
 import { api } from "@/lib/api"
 import { StudyProgram, StudyProgramInput } from "@/types"
 import { Button } from "@/components/ui/button"
@@ -261,7 +261,7 @@ export default function JurusanPage() {
                     </DialogHeader>
 
                     {!selectedJurusan ? (
-                        <Tabs defaultValue="single" value={addMode} onValueChange={(v) => setAddMode(v as any)} className="w-full">
+                        <Tabs defaultValue="single" value={addMode} onValueChange={(v) => setAddMode(v as "single" | "bulk")} className="w-full">
                             <TabsList className="grid w-full grid-cols-2">
                                 <TabsTrigger value="single">Single</TabsTrigger>
                                 <TabsTrigger value="bulk">Tambah Banyak</TabsTrigger>
